@@ -21,9 +21,15 @@ func getRegistry() map[string]Command {
 	return map[string]Command{
 		"map": {
 			Name:        "map",
-			Description: "Shows the names of 20 location areas in the Pokemon world.",
+			Description: "Shows the names of the next 20 location areas in the Pokemon world.",
 			config:      &mapConfig,
-			Command:     commandMap,
+			Command:     commandMapForward,
+		},
+		"mapb": {
+			Name:        "map back",
+			Description: "Shows the names of the previous 20 location areas in the Pokemon world.",
+			config:      &mapConfig,
+			Command:     commandMapBack,
 		},
 		"help": {
 			Name:        "help",
@@ -50,7 +56,7 @@ func commandHelp(config *Config) error {
 	fmt.Println("\nusage: <command>")
 	fmt.Printf("\nThese are common Pokedex commands used in various situations:\n\n")
 	for _, data := range registry {
-		fmt.Printf("    %s\t%s\n", data.Name, data.Description)
+		fmt.Printf("    %s \t%s\n", data.Name, data.Description)
 	}
 	return nil
 }
@@ -60,10 +66,24 @@ var mapConfig = Config{
 	Previous: "",
 }
 
-func commandMap(config *Config) error {
-	pokeLocationArea, err := getLocationAreas(config.Next)
+func commandMapForward(config *Config) error {
+	if config.Next == "" {
+		return fmt.Errorf("error: cant't map forward")
+	}
+	return Map(config, config.Next)
+}
+
+func commandMapBack(config *Config) error {
+	if config.Previous == "" {
+		return fmt.Errorf("error: cant't map back")
+	}
+	return Map(config, config.Previous)
+}
+
+func Map(config *Config, url string) error {
+	pokeLocationArea, err := getLocationAreas(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("error: failed getting location areas (%w)", err)
 	}
 	// update config's pagination
 	config.Next = pokeLocationArea.Next
