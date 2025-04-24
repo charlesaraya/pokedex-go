@@ -13,12 +13,19 @@ type Command struct {
 	Command     func() error
 }
 
-var Registry = map[string]Command{
-	"exit": {
-		Name:        "exit",
-		Description: "Exit the Pokedex CLI",
-		Command:     commandExit,
-	},
+func getRegistry() map[string]Command {
+	return map[string]Command{
+		"help": {
+			Name:        "help",
+			Description: "Shows the list of commands",
+			Command:     commandHelp,
+		},
+		"exit": {
+			Name:        "exit",
+			Description: "Exit the Pokedex CLI",
+			Command:     commandExit,
+		},
+	}
 }
 
 func cleanInput(text string) []string {
@@ -36,6 +43,17 @@ func commandExit() error {
 	return nil
 }
 
+func commandHelp() error {
+	registry := getRegistry()
+	fmt.Println("Welcome to the Pokedex!")
+	fmt.Println("\nusage: <command>")
+	fmt.Printf("\nThese are common Pokedex commands used in various situations:\n\n")
+	for _, data := range registry {
+		fmt.Printf("    %s\t%s\n", data.Name, data.Description)
+	}
+	return nil
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -45,14 +63,18 @@ func main() {
 		userInput := cleanInput(scanner.Text())
 
 		// Check if the user entered a command
-		for command, data := range Registry {
+		registry := getRegistry()
+		commandEntered := false
+		for command, data := range registry {
 			if command == userInput[0] {
 				if err := data.Command(); err != nil {
 					fmt.Printf("Error: %s command produced an error", command)
 				}
-			} else {
-				fmt.Println("Unknown command")
+				commandEntered = true
 			}
+		}
+		if !commandEntered {
+			fmt.Println("Unknown command")
 		}
 	}
 
