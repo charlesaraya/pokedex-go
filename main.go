@@ -29,7 +29,7 @@ func main() {
 		commandEntered := false
 		for command, data := range registry {
 			if command == userInput[0] {
-				if err := data.Command(); err != nil {
+				if err := data.Command(data.config); err != nil {
 					fmt.Printf("Error: %s command produced an error", command)
 				}
 				commandEntered = true
