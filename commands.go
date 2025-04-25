@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
@@ -13,7 +14,7 @@ type Config struct {
 type Command struct {
 	Name        string
 	Description string
-	config      *Config
+	Config      *Config
 	Command     func(*Config) error
 }
 
@@ -22,13 +23,13 @@ func getRegistry() map[string]Command {
 		"map": {
 			Name:        "map",
 			Description: "Shows the names of the next 20 location areas in the Pokemon world.",
-			config:      &mapConfig,
+			Config:      &mapConfig,
 			Command:     commandMapForward,
 		},
 		"mapb": {
 			Name:        "map back",
 			Description: "Shows the names of the previous 20 location areas in the Pokemon world.",
-			config:      &mapConfig,
+			Config:      &mapConfig,
 			Command:     commandMapBack,
 		},
 		"help": {
@@ -81,13 +82,22 @@ func commandMapBack(config *Config) error {
 }
 
 func Map(config *Config, url string) error {
-	pokeLocationArea, err := getLocationAreas(url)
-	if err != nil {
-		return fmt.Errorf("error: failed getting location areas (%w)", err)
+	var pokeLocationArea PokeLocationArea
+	cachedEntry, ok := PokeCache.Get("map")
+	if ok {
+		if err := json.Unmarshal(cachedEntry.Val, &pokeLocationArea); err != nil {
+			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
+		}
+	} else {
+		p, err := getLocationAreas(url)
+		if err != nil {
+			return fmt.Errorf("error: failed getting location areas (%w)", err)
+		}
+		pokeLocationArea = p
+		// update config's pagination
+		config.Next = pokeLocationArea.Next
+		config.Previous = pokeLocationArea.Previous
 	}
-	// update config's pagination
-	config.Next = pokeLocationArea.Next
-	config.Previous = pokeLocationArea.Previous
 	// Print results
 	for _, result := range pokeLocationArea.Results {
 		fmt.Println(result.Name)

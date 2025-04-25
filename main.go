@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/charlesaraya/pokedex-go/internal"
 )
 
 func cleanInput(text string) []string {
@@ -15,6 +18,9 @@ func cleanInput(text string) []string {
 	fields := strings.Fields(lowercased)
 	return fields
 }
+
+var duration, _ = time.ParseDuration("5s")
+var PokeCache = internal.NewCache(duration)
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -29,7 +35,7 @@ func main() {
 		commandEntered := false
 		for command, data := range registry {
 			if command == userInput[0] {
-				if err := data.Command(data.config); err != nil {
+				if err := data.Command(data.Config); err != nil {
 					fmt.Printf("Error: %s command produced an error (%s)\n", command, err)
 				}
 				commandEntered = true
