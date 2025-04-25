@@ -17,6 +17,7 @@ const (
 type Config struct {
 	Next     string
 	Previous string
+	Params   []string
 }
 
 type Command struct {
@@ -28,6 +29,14 @@ type Command struct {
 
 func getRegistry() map[string]Command {
 	return map[string]Command{
+		CMD_EXPLORE: {
+			Name:        "Explore",
+			Description: "Shows the names of all the Pokémons located in an area in the Pokemon world.",
+			Config: &Config{
+				Next: "https://pokeapi.co/api/v2/location-area/",
+			},
+			Command: commandExplore,
+		},
 		CMD_MAP: {
 			Name:        "map",
 			Description: "Shows the names of the next 20 location areas in the Pokemon world.",
@@ -116,6 +125,37 @@ func Map(config *Config, url string, cmd string) error {
 	// Print results
 	for _, result := range pokeLocationArea.Results {
 		fmt.Println(result.Name)
+	}
+	return nil
+}
+
+func commandExplore(config *Config) error {
+	var pokemons []Pokemon
+
+	fullCommand := CMD_EXPLORE + config.Params[0]
+	cachedEntry, ok := PokeCache.Get(fullCommand)
+	if ok {
+		if err := json.Unmarshal(cachedEntry.Val, &pokemons); err != nil {
+			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
+		}
+	} else {
+		fullUrl := config.Next + config.Params[0]
+		p, err := getPokemonsInLocationArea(fullUrl)
+		if err != nil {
+			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
+		}
+		// cache data
+		pokemonsJsonData, err := json.Marshal(p)
+		if err != nil {
+			return fmt.Errorf("error: marshal operation failed: %w", err)
+		}
+		PokeCache.Add(fullCommand, pokemonsJsonData)
+
+		pokemons = p
+	}
+	// Print results
+	for _, pokemon := range pokemons {
+		fmt.Println(pokemon.Name)
 	}
 	return nil
 }

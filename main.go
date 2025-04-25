@@ -35,6 +35,9 @@ func main() {
 		commandEntered := false
 		for command, data := range registry {
 			if command == userInput[0] {
+				if len(userInput) > 1 {
+					data.Config.Params = userInput[1:]
+				}
 				if err := data.Command(data.Config); err != nil {
 					fmt.Printf("Error: %s command produced an error (%s)\n", command, err)
 				}
