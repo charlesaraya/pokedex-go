@@ -20,21 +20,22 @@ type PokeLocationArea struct {
 }
 
 func getLocationAreas(endpoint string) (PokeLocationArea, error) {
+	locationArea := PokeLocationArea{}
+
 	res, err := http.Get(endpoint)
 	if err != nil {
-		return PokeLocationArea{}, fmt.Errorf("error: failed getting response %w", err)
+		return locationArea, fmt.Errorf("error: failed getting response %w", err)
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return PokeLocationArea{}, fmt.Errorf("error: reading body from response: %w", err)
+		return locationArea, fmt.Errorf("error: reading body from response: %w", err)
 	}
 	if res.StatusCode > 299 {
-		return PokeLocationArea{}, fmt.Errorf("error: response failed with status code: %d", res.StatusCode)
+		return locationArea, fmt.Errorf("error: response failed with status code: %d", res.StatusCode)
 	}
-	var locationAreaObject PokeLocationArea
-	if err := json.Unmarshal(body, &locationAreaObject); err != nil {
-		return PokeLocationArea{}, fmt.Errorf("error: unmarshal operation failed: %w", err)
+	if err := json.Unmarshal(body, &locationArea); err != nil {
+		return locationArea, fmt.Errorf("error: unmarshal operation failed: %w", err)
 	}
-	return locationAreaObject, nil
+	return locationArea, nil
 }

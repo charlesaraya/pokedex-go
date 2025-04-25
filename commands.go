@@ -71,19 +71,19 @@ func commandMapForward(config *Config) error {
 	if config.Next == "" {
 		return fmt.Errorf("error: cant't map forward")
 	}
-	return Map(config, config.Next)
+	return Map(config, config.Next, "map")
 }
 
 func commandMapBack(config *Config) error {
 	if config.Previous == "" {
 		return fmt.Errorf("error: cant't map back")
 	}
-	return Map(config, config.Previous)
+	return Map(config, config.Previous, "mapb")
 }
 
-func Map(config *Config, url string) error {
+func Map(config *Config, url string, cmd string) error {
 	var pokeLocationArea PokeLocationArea
-	cachedEntry, ok := PokeCache.Get("map")
+	cachedEntry, ok := PokeCache.Get(cmd)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokeLocationArea); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
@@ -93,6 +93,13 @@ func Map(config *Config, url string) error {
 		if err != nil {
 			return fmt.Errorf("error: failed getting location areas (%w)", err)
 		}
+		// cache data
+		data, err := json.Marshal(p)
+		if err != nil {
+			return fmt.Errorf("error: marshal operation failed: %w", err)
+		}
+		PokeCache.Add(cmd, data)
+
 		pokeLocationArea = p
 		// update config's pagination
 		config.Next = pokeLocationArea.Next
