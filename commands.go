@@ -6,6 +6,14 @@ import (
 	"os"
 )
 
+const (
+	CMD_MAP     string = "map"
+	CMD_MAPB    string = "mapb"
+	CMD_HELP    string = "help"
+	CMD_EXIT    string = "exit"
+	CMD_EXPLORE string = "explore"
+)
+
 type Config struct {
 	Next     string
 	Previous string
@@ -20,24 +28,24 @@ type Command struct {
 
 func getRegistry() map[string]Command {
 	return map[string]Command{
-		"map": {
+		CMD_MAP: {
 			Name:        "map",
 			Description: "Shows the names of the next 20 location areas in the Pokemon world.",
 			Config:      &mapConfig,
 			Command:     commandMapForward,
 		},
-		"mapb": {
+		CMD_MAPB: {
 			Name:        "map back",
 			Description: "Shows the names of the previous 20 location areas in the Pokemon world.",
 			Config:      &mapConfig,
 			Command:     commandMapBack,
 		},
-		"help": {
+		CMD_HELP: {
 			Name:        "help",
 			Description: "Shows the list of commands",
 			Command:     commandHelp,
 		},
-		"exit": {
+		CMD_EXIT: {
 			Name:        "exit",
 			Description: "Exit the Pokedex CLI",
 			Command:     commandExit,
@@ -71,14 +79,14 @@ func commandMapForward(config *Config) error {
 	if config.Next == "" {
 		return fmt.Errorf("error: cant't map forward")
 	}
-	return Map(config, config.Next, "map")
+	return Map(config, config.Next, CMD_MAP)
 }
 
 func commandMapBack(config *Config) error {
 	if config.Previous == "" {
 		return fmt.Errorf("error: cant't map back")
 	}
-	return Map(config, config.Previous, "mapb")
+	return Map(config, config.Previous, CMD_MAPB)
 }
 
 func Map(config *Config, url string, cmd string) error {
