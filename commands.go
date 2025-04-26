@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 )
 
@@ -12,6 +13,7 @@ const (
 	CMD_HELP    string = "help"
 	CMD_EXIT    string = "exit"
 	CMD_EXPLORE string = "explore"
+	CMD_CATCH   string = "catch"
 )
 
 type Config struct {
@@ -29,6 +31,14 @@ type Command struct {
 
 func getRegistry() map[string]Command {
 	return map[string]Command{
+		CMD_CATCH: {
+			Name:        "Catch",
+			Description: "Try catch a Pokémon.",
+			Config: &Config{
+				Next: "https://pokeapi.co/api/v2/pokemon/",
+			},
+			Command: commandCatch,
+		},
 		CMD_EXPLORE: {
 			Name:        "Explore",
 			Description: "Shows the names of all the Pokémons located in an area in the Pokemon world.",
@@ -156,6 +166,42 @@ func commandExplore(config *Config) error {
 	// Print results
 	for _, pokemon := range pokemons {
 		fmt.Println(pokemon.Name)
+	}
+	return nil
+}
+
+func commandCatch(config *Config) error {
+	var pokemon Pokemon
+
+	fullCommand := CMD_EXPLORE + config.Params[0]
+	cachedEntry, ok := PokeCache.Get(fullCommand)
+	if ok {
+		if err := json.Unmarshal(cachedEntry.Val, &pokemon); err != nil {
+			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
+		}
+	} else {
+		fullUrl := config.Next + config.Params[0]
+		p, err := getPokemon(fullUrl)
+		if err != nil {
+			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
+		}
+		// cache data
+		pokemonJsonData, err := json.Marshal(p)
+		if err != nil {
+			return fmt.Errorf("error: marshal operation failed: %w", err)
+		}
+		PokeCache.Add(fullCommand, pokemonJsonData)
+
+		pokemon = p
+	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	if rand.Float64() > 0.5 {
+		fmt.Printf("%s was caught!\n", pokemon.Name)
+		if _, ok := UserPokedex.Get(pokemon.Name); !ok {
+			UserPokedex.Add(pokemon)
+		}
+	} else {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
 	}
 	return nil
 }

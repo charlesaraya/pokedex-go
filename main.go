@@ -21,6 +21,7 @@ func cleanInput(text string) []string {
 
 var duration, _ = time.ParseDuration("5s")
 var PokeCache = internal.NewCache(duration)
+var UserPokedex = NewPokedex()
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
