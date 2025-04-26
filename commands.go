@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
 )
 
 const (
@@ -194,7 +195,27 @@ func commandCatch(config *Config) error {
 
 		pokemon = p
 	}
-	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	fmt.Printf("Throwing a Pokeball at %s!", pokemon.Name)
+	// We generate ellipsis every sec to add excitement
+	duration, _ := time.ParseDuration("1s")
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+	done := make(chan bool)
+	tickerCount := 3
+	go func() {
+		for range ticker.C {
+			fmt.Printf(".")
+			<-ticker.C
+			tickerCount--
+			if tickerCount == 0 {
+				done <- true
+				return
+			}
+		}
+	}()
+	<-done
+	fmt.Println()
+	// TODO: Add a formula that generates a decent Capture Probability
 	if rand.Float64() > 0.5 {
 		fmt.Printf("%s was caught!\n", pokemon.Name)
 		if _, ok := UserPokedex.Get(pokemon.Name); !ok {
