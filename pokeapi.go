@@ -50,20 +50,20 @@ type PokedexEntry struct {
 }
 
 type Pokedex struct {
-	Pokedex map[string]*PokedexEntry
-	Mu      sync.RWMutex
+	PokedexEntries map[string]*PokedexEntry
+	Mu             sync.RWMutex
 }
 
 func NewPokedex() *Pokedex {
 	var pokedex *Pokedex = &Pokedex{
-		Pokedex: make(map[string]*PokedexEntry),
+		PokedexEntries: make(map[string]*PokedexEntry),
 	}
 	return pokedex
 }
 
 func (p *Pokedex) Add(pokemon Pokemon) {
 	p.Mu.Lock()
-	p.Pokedex[pokemon.Name] = &PokedexEntry{
+	p.PokedexEntries[pokemon.Name] = &PokedexEntry{
 		CatchedAt: time.Now(),
 		Pokemon:   pokemon,
 	}
@@ -72,9 +72,19 @@ func (p *Pokedex) Add(pokemon Pokemon) {
 
 func (p *Pokedex) Get(key string) (*PokedexEntry, bool) {
 	p.Mu.RLock()
-	pokedexEntry, ok := p.Pokedex[key]
+	pokedexEntry, ok := p.PokedexEntries[key]
 	p.Mu.RUnlock()
 	return pokedexEntry, ok
+}
+
+func (p *Pokedex) GetAll() []string {
+	pokemonNames := []string{}
+	p.Mu.RLock()
+	for key := range p.PokedexEntries {
+		pokemonNames = append(pokemonNames, key)
+	}
+	p.Mu.RUnlock()
+	return pokemonNames
 }
 
 func getLocationAreas(endpoint string) (PokeLocationArea, error) {

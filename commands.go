@@ -16,6 +16,7 @@ const (
 	CMD_EXPLORE string = "explore"
 	CMD_CATCH   string = "catch"
 	CMD_INSPECT string = "inspect"
+	CMD_POKEDEX string = "pokedex"
 )
 
 type Config struct {
@@ -33,6 +34,12 @@ type Command struct {
 
 func getRegistry() map[string]Command {
 	return map[string]Command{
+		CMD_POKEDEX: {
+			Name:        "Pokedex",
+			Description: "Show all Pokémon from the Pokedex.",
+			Config:      &Config{},
+			Command:     commandPokedex,
+		},
 		CMD_INSPECT: {
 			Name:        "Inspect",
 			Description: "Inspect a Pokémon from the Pokedex.",
@@ -250,6 +257,19 @@ func commandInspect(config *Config) error {
 	fmt.Printf("Types:\n")
 	for _, pokemonType := range pokedexEntry.Pokemon.Types {
 		fmt.Printf("  - %s\n", pokemonType.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(config *Config) error {
+	pokemonNames := UserPokedex.GetAll()
+	if len(pokemonNames) == 0 {
+		fmt.Println("your Pokedex is empty... Try catch some Pokémons first!")
+	} else {
+		fmt.Println("Your Pokedex:")
+		for _, name := range pokemonNames {
+			fmt.Printf("  - %s\n", name)
+		}
 	}
 	return nil
 }
