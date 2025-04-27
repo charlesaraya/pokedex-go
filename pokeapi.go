@@ -22,9 +22,26 @@ type PokeLocationArea struct {
 }
 
 type Pokemon struct {
-	Name       string `json:"name"`
-	Experience int    `json:"base_experience"`
-	Url        string `json:"url"`
+	Name       string        `json:"name"`
+	Height     int           `json:"height"`
+	Weight     int           `json:"weight"`
+	Experience int           `json:"base_experience"`
+	Url        string        `json:"url"`
+	Stats      []PokemonStat `json:"stats"`
+	Types      []PokemonType `json:"types"`
+}
+
+type PokemonStat struct {
+	Stat struct {
+		Name string `json:"name"`
+	} `json:"stat"`
+	Base int `json:"base_stat"`
+}
+
+type PokemonType struct {
+	Type struct {
+		Name string `json:"name"`
+	} `json:"type"`
 }
 
 type PokedexEntry struct {

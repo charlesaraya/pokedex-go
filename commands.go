@@ -15,6 +15,7 @@ const (
 	CMD_EXIT    string = "exit"
 	CMD_EXPLORE string = "explore"
 	CMD_CATCH   string = "catch"
+	CMD_INSPECT string = "inspect"
 )
 
 type Config struct {
@@ -32,6 +33,12 @@ type Command struct {
 
 func getRegistry() map[string]Command {
 	return map[string]Command{
+		CMD_INSPECT: {
+			Name:        "Inspect",
+			Description: "Inspect a Pokémon from the Pokedex.",
+			Config:      &Config{},
+			Command:     commandInspect,
+		},
 		CMD_CATCH: {
 			Name:        "Catch",
 			Description: "Try catch a Pokémon.",
@@ -223,6 +230,26 @@ func commandCatch(config *Config) error {
 		}
 	} else {
 		fmt.Printf("%s escaped!\n", pokemon.Name)
+	}
+	return nil
+}
+
+func commandInspect(config *Config) error {
+	pokedexEntry, ok := UserPokedex.Get(config.Params[0])
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+		return nil
+	}
+	fmt.Printf("Name: %s\n", pokedexEntry.Pokemon.Name)
+	fmt.Printf("Height: %v\n", pokedexEntry.Pokemon.Height)
+	fmt.Printf("Weight: %v\n", pokedexEntry.Pokemon.Weight)
+	fmt.Printf("Stats:\n")
+	for _, stat := range pokedexEntry.Pokemon.Stats {
+		fmt.Printf("  -%s: %v\n", stat.Stat.Name, stat.Base)
+	}
+	fmt.Printf("Types:\n")
+	for _, pokemonType := range pokedexEntry.Pokemon.Types {
+		fmt.Printf("  - %s\n", pokemonType.Type.Name)
 	}
 	return nil
 }
