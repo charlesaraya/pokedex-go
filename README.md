@@ -31,6 +31,7 @@ This enhancement allows for basic text manipulation in the terminal:
 
 - **Move Cursor Left/Right**: Navigate the cursor within the input text using the left and right arrow keys.
 - **Backspace**: Delete the character at the cursor position using the backspace key.
+- **Move Cursor Up/Down**: Navigate the command history using the up and down arrow keys.
 
 These features provide a more interactive and user-friendly experience when entering commands in the terminal, similar to standard text editing behavior.
 
@@ -49,7 +50,6 @@ These features provide a more interactive and user-friendly experience when ente
 
 ## Improvement Ideas
 
-- Enhance the CLI to support using the "up" arrow key to scroll through and reuse previous commands.
 - Introduce Pokémon battles, allowing players to simulate fights between their caught Pokémon.
 - Expand unit test coverage to ensure better reliability and stability.
 - Refactor the codebase for better organization, readability, and testability.
