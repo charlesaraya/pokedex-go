@@ -30,6 +30,9 @@ func main() {
 	}
 	defer disableRawMode()
 
+	commandHistory := []string{}
+	historyIdx := 0
+
 	buf := make([]byte, 3) // Arrow keys send 3 bytes
 	inputBuffer := []rune{}
 	promptName := "Pokedex > "
@@ -44,6 +47,34 @@ func main() {
 		// Arrows Keys
 		if bufLen == 3 && buf[0] == 0x1b && buf[1] == '[' {
 			switch buf[2] {
+			// Up arrow
+			case 'A':
+				if historyIdx > 0 {
+					if historyIdx == len(commandHistory) && len(inputBuffer) > 0 {
+						commandHistory = append(commandHistory, string(inputBuffer))
+					} else if len(inputBuffer) > 0 {
+						commandHistory[historyIdx] = string(inputBuffer)
+					}
+					historyIdx--
+					inputBuffer = []rune(commandHistory[historyIdx])
+					cursor = len(inputBuffer)
+					redrawLine(inputBuffer, cursor, promptName)
+				}
+			// Down arrow
+			case 'B':
+				if historyIdx < len(commandHistory) {
+					commandHistory[historyIdx] = string(inputBuffer)
+					historyIdx++
+					if historyIdx == len(commandHistory) {
+						// reset buffer
+						inputBuffer = inputBuffer[:0]
+						cursor = 0
+					} else {
+						inputBuffer = []rune(commandHistory[historyIdx])
+						cursor = len(inputBuffer)
+					}
+					redrawLine(inputBuffer, cursor, promptName)
+				}
 			// Right arrow
 			case 'C':
 				// Move the cursor forward
@@ -103,12 +134,23 @@ func main() {
 				if !isKnownCommand {
 					fmt.Println("Unknown command")
 				}
+				// Add command to history
+				if historyIdx == len(commandHistory) {
+					commandHistory = append(commandHistory, string(inputBuffer))
+					historyIdx++
+				} else {
+					copy(commandHistory[historyIdx:], commandHistory[historyIdx+1:]) // Shift everything left
+					commandHistory = commandHistory[:len(commandHistory)-1]          // decrease the buffer size by one
+					commandHistory = append(commandHistory, string(inputBuffer))
+					historyIdx = len(commandHistory)
+				}
 				// reset buffer
 				inputBuffer = inputBuffer[:0]
 				cursor = 0
 				redrawLine(inputBuffer, cursor, promptName)
 				continue
 			default:
+				historyIdx = len(commandHistory)
 				fmt.Println()
 				redrawLine(inputBuffer, cursor, promptName)
 			}
