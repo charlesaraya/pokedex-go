@@ -30,91 +30,52 @@ func main() {
 	}
 	defer disableRawMode()
 
-	commandHistory := []string{}
-	historyIdx := 0
+	commandHistory, historyIdx := initCommandHistory()
+	inputBuffer, cursor := initBuffer()
+	buf := make([]byte, 3)
 
-	buf := make([]byte, 3) // Arrow keys send 3 bytes
-	inputBuffer := []rune{}
-	promptName := "Pokedex > "
-	cursor := 0
-	redrawLine(inputBuffer, cursor, promptName)
+	redrawLine(inputBuffer, cursor)
 	for {
-		bufLen, err := os.Stdin.Read(buf)
-		if err != nil {
+		if _, err := os.Stdin.Read(buf); err != nil {
 			fmt.Println("Error reading:", err)
 			break
 		}
-		// Arrows Keys
-		if bufLen == 3 && buf[0] == 0x1b && buf[1] == '[' {
-			switch buf[2] {
-			// Up arrow
-			case 'A':
-				if historyIdx > 0 {
-					if historyIdx == len(commandHistory) && len(inputBuffer) > 0 {
-						commandHistory = append(commandHistory, string(inputBuffer))
-					} else if len(inputBuffer) > 0 {
-						commandHistory[historyIdx] = string(inputBuffer)
-					}
-					historyIdx--
-					inputBuffer = []rune(commandHistory[historyIdx])
-					cursor = len(inputBuffer)
-					redrawLine(inputBuffer, cursor, promptName)
-				}
-			// Down arrow
-			case 'B':
-				if historyIdx < len(commandHistory) {
+		switch getKey(buf) {
+		case KEY_UP:
+			if historyIdx > 0 {
+				if historyIdx == len(commandHistory) && len(inputBuffer) > 0 {
+					commandHistory = append(commandHistory, string(inputBuffer))
+				} else if len(inputBuffer) > 0 {
 					commandHistory[historyIdx] = string(inputBuffer)
-					historyIdx++
-					if historyIdx == len(commandHistory) {
-						// reset buffer
-						inputBuffer = inputBuffer[:0]
-						cursor = 0
-					} else {
-						inputBuffer = []rune(commandHistory[historyIdx])
-						cursor = len(inputBuffer)
-					}
-					redrawLine(inputBuffer, cursor, promptName)
 				}
-			// Right arrow
-			case 'C':
-				// Move the cursor forward
-				if cursor < len(inputBuffer) {
-					cursor++
-					os.Stdout.Write([]byte("\033[C"))
-				}
-			// Left arrow
-			case 'D':
-				// Move cursor back
-				if cursor > 0 {
-					cursor--
-					os.Stdout.Write([]byte("\b"))
-				}
+				historyIdx--
+				updateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
+				redrawLine(inputBuffer, cursor)
 			}
-			continue
-		}
-		// Backspace key
-		if buf[0] == 127 {
-			if cursor > 0 {
-				copy(inputBuffer[cursor-1:], inputBuffer[cursor:]) // Shift everything left
-				inputBuffer = inputBuffer[:len(inputBuffer)-1]     // decrease the buffer size by one
-				cursor--
-				redrawLine(inputBuffer, cursor, promptName)
+		case KEY_DOWN:
+			if historyIdx < len(commandHistory) {
+				commandHistory[historyIdx] = string(inputBuffer)
+				historyIdx++
+				if historyIdx == len(commandHistory) {
+					resetBuffer(&inputBuffer, &cursor)
+				} else {
+					updateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
+				}
+				redrawLine(inputBuffer, cursor)
 			}
-			continue
-		}
-		// Printable characters
-		if buf[0] >= 32 && buf[0] <= 126 {
-			r := rune(buf[0])
-			inputBuffer = append(inputBuffer, 0)               // grow buffer by 1
-			copy(inputBuffer[cursor+1:], inputBuffer[cursor:]) // Shift everything right
-			inputBuffer[cursor] = r                            // Insert the new rune
-			cursor++
-			redrawLine(inputBuffer, cursor, promptName)
-		}
-		// Enter key
-		if buf[0] == '\n' {
-			switch {
-			case len(inputBuffer) > 0:
+		case KEY_RIGHT:
+			moveCursorRight(&cursor, len(inputBuffer))
+		case KEY_LEFT:
+			moveCursorLeft(&cursor)
+		case KEY_BACKSPACE:
+			if ok := deleteFromBuffer(&inputBuffer, &cursor); ok {
+				redrawLine(inputBuffer, cursor)
+			}
+		case KEY_PRINTABLE:
+			addToBuffer(rune(buf[0]), &inputBuffer, &cursor)
+			redrawLine(inputBuffer, cursor)
+		case KEY_ENTER:
+			if len(inputBuffer) > 0 {
 				fmt.Println() // move to next line
 				// Check if the user entered a valid command
 				fullCommand := cleanInput(string(inputBuffer))
@@ -134,26 +95,14 @@ func main() {
 				if !isKnownCommand {
 					fmt.Println("Unknown command")
 				}
-				// Add command to history
-				if historyIdx == len(commandHistory) {
-					commandHistory = append(commandHistory, string(inputBuffer))
-					historyIdx++
-				} else {
-					copy(commandHistory[historyIdx:], commandHistory[historyIdx+1:]) // Shift everything left
-					commandHistory = commandHistory[:len(commandHistory)-1]          // decrease the buffer size by one
-					commandHistory = append(commandHistory, string(inputBuffer))
-					historyIdx = len(commandHistory)
-				}
-				// reset buffer
-				inputBuffer = inputBuffer[:0]
-				cursor = 0
-				redrawLine(inputBuffer, cursor, promptName)
+				addCommand(string(inputBuffer), &commandHistory, &historyIdx)
+				resetBuffer(&inputBuffer, &cursor)
+				redrawLine(inputBuffer, cursor)
 				continue
-			default:
-				historyIdx = len(commandHistory)
-				fmt.Println()
-				redrawLine(inputBuffer, cursor, promptName)
 			}
+			historyIdx = len(commandHistory)
+			fmt.Println()
+			redrawLine(inputBuffer, cursor)
 		}
 	}
 

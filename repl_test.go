@@ -68,3 +68,52 @@ func TestPokedex(t *testing.T) {
 		}
 	}
 }
+
+func TestKeys(t *testing.T) {
+	cases := []struct {
+		input    []byte
+		expected string
+	}{
+		{
+			input:    []byte{27, 91, 65}, // Up arrow
+			expected: KEY_UP,
+		},
+		{
+			input:    []byte{27, 91, 66}, // Down arrow
+			expected: KEY_DOWN,
+		},
+		{
+			input:    []byte{27, 91, 68}, // Left arrow
+			expected: KEY_LEFT,
+		},
+		{
+			input:    []byte{27, 91, 67}, // Right arrow
+			expected: KEY_RIGHT,
+		},
+		{
+			input:    []byte{127, 0, 0}, // Backspace
+			expected: KEY_BACKSPACE,
+		},
+		{
+			input:    []byte{10, 0, 0}, // Enter
+			expected: KEY_ENTER,
+		},
+		{
+			input:    []byte{32, 0, 0}, // Printable lower bound
+			expected: KEY_PRINTABLE,
+		},
+		{
+			input:    []byte{126, 0, 0}, // Printable upper bound
+			expected: KEY_PRINTABLE,
+		},
+		{
+			input:    []byte{128, 0, 0}, // Unknown
+			expected: KEY_UNKNOWN,
+		},
+	}
+	for _, c := range cases {
+		if key := getKey(c.input); key != c.expected {
+			t.Errorf("got %q expected %v", key, c.expected)
+		}
+	}
+}
