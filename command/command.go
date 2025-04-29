@@ -86,19 +86,19 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 func GetRegistry() map[string]Command {
 	return map[string]Command{
 		CMD_POKEDEX: {
-			Name:        "Pokedex",
+			Name:        "pokedex",
 			Description: "Show all Pokémon from the Pokedex.",
 			Config:      &Config{},
 			Command:     commandPokedex,
 		},
 		CMD_INSPECT: {
-			Name:        "Inspect",
+			Name:        "inspect",
 			Description: "Inspect a Pokémon from the Pokedex.",
 			Config:      &Config{},
 			Command:     commandInspect,
 		},
 		CMD_CATCH: {
-			Name:        "Catch",
+			Name:        "catch",
 			Description: "Try catch a Pokémon.",
 			Config: &Config{
 				Next: "https://pokeapi.co/api/v2/pokemon/",
@@ -106,7 +106,7 @@ func GetRegistry() map[string]Command {
 			Command: commandCatch,
 		},
 		CMD_EXPLORE: {
-			Name:        "Explore",
+			Name:        "explore",
 			Description: "Shows the names of all the Pokémons located in an area in the Pokemon world.",
 			Config: &Config{
 				Next: "https://pokeapi.co/api/v2/location-area/",
@@ -120,7 +120,7 @@ func GetRegistry() map[string]Command {
 			Command:     commandMapForward,
 		},
 		CMD_MAPB: {
-			Name:        "map back",
+			Name:        "mapb",
 			Description: "Shows the names of the previous 20 location areas in the Pokemon world.",
 			Config:      &mapConfig,
 			Command:     commandMapBack,
