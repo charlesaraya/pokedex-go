@@ -83,12 +83,11 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 	return cachedEntry, ok
 }
 
-var mapConfig = Config{
-	Next:     pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
-	Previous: "",
-}
-
 func GetRegistry() map[string]Command {
+	mapConfig := Config{
+		Next:     pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
+		Previous: "",
+	}
 	return map[string]Command{
 		CMD_POKEDEX: {
 			Name:        "pokedex",
