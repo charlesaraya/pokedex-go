@@ -3,45 +3,36 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/internal"
+	"github.com/charlesaraya/pokedex-go/cache"
+	"github.com/charlesaraya/pokedex-go/terminal"
 )
 
-func cleanInput(text string) []string {
-	if len(text) == 0 {
-		return []string{}
-	}
-	lowercased := strings.ToLower(text)
-	fields := strings.Fields(lowercased)
-	return fields
-}
-
 var duration, _ = time.ParseDuration("5s")
-var PokeCache = internal.NewCache(duration)
+var PokeCache = cache.NewCache(duration)
 var UserPokedex = NewPokedex()
 
 func main() {
-	err := enableRawMode()
+	err := terminal.EnableRawMode()
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	defer disableRawMode()
+	defer terminal.DisableRawMode()
 
-	commandHistory, historyIdx := initCommandHistory()
-	inputBuffer, cursor := initBuffer()
+	commandHistory, historyIdx := terminal.InitCommandHistory()
+	inputBuffer, cursor := terminal.InitBuffer()
 	buf := make([]byte, 3)
 
-	redrawLine(inputBuffer, cursor)
+	terminal.RedrawLine(inputBuffer, cursor)
 	for {
 		if _, err := os.Stdin.Read(buf); err != nil {
 			fmt.Println("Error reading:", err)
 			break
 		}
-		switch getKey(buf) {
-		case KEY_UP:
+		switch terminal.GetKey(buf) {
+		case terminal.KEY_UP:
 			if historyIdx > 0 {
 				if historyIdx == len(commandHistory) && len(inputBuffer) > 0 {
 					commandHistory = append(commandHistory, string(inputBuffer))
@@ -49,36 +40,36 @@ func main() {
 					commandHistory[historyIdx] = string(inputBuffer)
 				}
 				historyIdx--
-				updateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
-				redrawLine(inputBuffer, cursor)
+				terminal.UpdateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
+				terminal.RedrawLine(inputBuffer, cursor)
 			}
-		case KEY_DOWN:
+		case terminal.KEY_DOWN:
 			if historyIdx < len(commandHistory) {
 				commandHistory[historyIdx] = string(inputBuffer)
 				historyIdx++
 				if historyIdx == len(commandHistory) {
-					resetBuffer(&inputBuffer, &cursor)
+					terminal.ResetBuffer(&inputBuffer, &cursor)
 				} else {
-					updateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
+					terminal.UpdateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
 				}
-				redrawLine(inputBuffer, cursor)
+				terminal.RedrawLine(inputBuffer, cursor)
 			}
-		case KEY_RIGHT:
-			moveCursorRight(&cursor, len(inputBuffer))
-		case KEY_LEFT:
-			moveCursorLeft(&cursor)
-		case KEY_BACKSPACE:
-			if ok := deleteFromBuffer(&inputBuffer, &cursor); ok {
-				redrawLine(inputBuffer, cursor)
+		case terminal.KEY_RIGHT:
+			terminal.MoveCursorRight(&cursor, len(inputBuffer))
+		case terminal.KEY_LEFT:
+			terminal.MoveCursorLeft(&cursor)
+		case terminal.KEY_BACKSPACE:
+			if ok := terminal.DeleteFromBuffer(&inputBuffer, &cursor); ok {
+				terminal.RedrawLine(inputBuffer, cursor)
 			}
-		case KEY_PRINTABLE:
-			addToBuffer(rune(buf[0]), &inputBuffer, &cursor)
-			redrawLine(inputBuffer, cursor)
-		case KEY_ENTER:
+		case terminal.KEY_PRINTABLE:
+			terminal.AddToBuffer(rune(buf[0]), &inputBuffer, &cursor)
+			terminal.RedrawLine(inputBuffer, cursor)
+		case terminal.KEY_ENTER:
 			if len(inputBuffer) > 0 {
 				fmt.Println() // move to next line
 				// Check if the user entered a valid command
-				fullCommand := cleanInput(string(inputBuffer))
+				fullCommand := terminal.CleanInput(string(inputBuffer))
 				registry := getRegistry()
 				isKnownCommand := false
 				for command, data := range registry {
@@ -95,14 +86,14 @@ func main() {
 				if !isKnownCommand {
 					fmt.Println("Unknown command")
 				}
-				addCommand(string(inputBuffer), &commandHistory, &historyIdx)
-				resetBuffer(&inputBuffer, &cursor)
-				redrawLine(inputBuffer, cursor)
+				terminal.AddCommand(string(inputBuffer), &commandHistory, &historyIdx)
+				terminal.ResetBuffer(&inputBuffer, &cursor)
+				terminal.RedrawLine(inputBuffer, cursor)
 				continue
 			}
 			historyIdx = len(commandHistory)
 			fmt.Println()
-			redrawLine(inputBuffer, cursor)
+			terminal.RedrawLine(inputBuffer, cursor)
 		}
 	}
 

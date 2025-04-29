@@ -1,8 +1,9 @@
-package main
+package terminal
 
 import (
 	"fmt"
 	"os"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -22,7 +23,17 @@ const (
 
 const PROMPT string = "Pokedex > "
 
-func enableRawMode() error {
+// Preprocesses a string and returns lowercased words
+func CleanInput(text string) []string {
+	if len(text) == 0 {
+		return []string{}
+	}
+	lowercased := strings.ToLower(text)
+	fields := strings.Fields(lowercased)
+	return fields
+}
+
+func EnableRawMode() error {
 
 	fd := int(os.Stdin.Fd())
 
@@ -47,12 +58,12 @@ func enableRawMode() error {
 	return nil
 }
 
-func disableRawMode() {
+func DisableRawMode() {
 	fd := int(os.Stdin.Fd())
 	syscall.Syscall6(syscall.SYS_IOCTL, uintptr(fd), uintptr(syscall.TIOCSETA), uintptr(unsafe.Pointer(&oldState)), 0, 0, 0)
 }
 
-func getKey(buffer []byte) string {
+func GetKey(buffer []byte) string {
 	// Arrow keys
 	if len(buffer) == 3 && buffer[0] == 0x1b && buffer[1] == '[' {
 		switch buffer[2] {
@@ -81,14 +92,18 @@ func getKey(buffer []byte) string {
 	return KEY_UNKNOWN
 }
 
-func addToBuffer(r rune, buffer *[]rune, cursor *int) {
+func InitBuffer() ([]rune, int) {
+	return []rune{}, 0
+}
+
+func AddToBuffer(r rune, buffer *[]rune, cursor *int) {
 	*buffer = append(*buffer, 0)                     // grow buffer by 1
 	copy((*buffer)[*cursor+1:], (*buffer)[*cursor:]) // Shift everything right
 	(*buffer)[*cursor] = r                           // Insert the new rune
 	*cursor++
 }
 
-func deleteFromBuffer(buffer *[]rune, cursor *int) bool {
+func DeleteFromBuffer(buffer *[]rune, cursor *int) bool {
 	if *cursor > 0 {
 		copy((*buffer)[*cursor-1:], (*buffer)[*cursor:]) // Shift everything left
 		*buffer = (*buffer)[:len(*buffer)-1]             // decrease the buffer size by one
@@ -98,21 +113,17 @@ func deleteFromBuffer(buffer *[]rune, cursor *int) bool {
 	return false
 }
 
-func initBuffer() ([]rune, int) {
-	return []rune{}, 0
-}
-
-func updateBuffer(command string, buffer *[]rune, cursor *int) {
+func UpdateBuffer(command string, buffer *[]rune, cursor *int) {
 	*buffer = []rune(command)
 	*cursor = len(*buffer)
 }
 
-func resetBuffer(buffer *[]rune, cursor *int) {
+func ResetBuffer(buffer *[]rune, cursor *int) {
 	*buffer = (*buffer)[:0]
 	*cursor = 0
 }
 
-func moveCursorLeft(cursor *int) bool {
+func MoveCursorLeft(cursor *int) bool {
 	if *cursor > 0 {
 		*cursor--
 		os.Stdout.Write([]byte("\b")) // prints the cursor one slot back
@@ -121,7 +132,7 @@ func moveCursorLeft(cursor *int) bool {
 	return false
 }
 
-func moveCursorRight(cursor *int, max int) bool {
+func MoveCursorRight(cursor *int, max int) bool {
 	if *cursor < max {
 		*cursor++
 		os.Stdout.Write([]byte("\033[C")) // prints the cursor one slot fwd
@@ -130,11 +141,11 @@ func moveCursorRight(cursor *int, max int) bool {
 	return false
 }
 
-func initCommandHistory() ([]string, int) {
+func InitCommandHistory() ([]string, int) {
 	return []string{}, 0
 }
 
-func addCommand(command string, history *[]string, idx *int) {
+func AddCommand(command string, history *[]string, idx *int) {
 	if *idx == len(*history) {
 		*history = append(*history, command)
 		*idx++
@@ -146,7 +157,7 @@ func addCommand(command string, history *[]string, idx *int) {
 	}
 }
 
-func redrawLine(buffer []rune, cursor int) {
+func RedrawLine(buffer []rune, cursor int) {
 	fmt.Print("\r") // Move to beginning of line
 	fmt.Print(PROMPT)
 	fmt.Print(string(buffer))
