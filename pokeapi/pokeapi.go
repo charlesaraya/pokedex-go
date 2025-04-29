@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	ENDPOINT_POKEMON       string = "https://pokeapi.co/api/v2/pokemon/"
+	ENDPOINT_LOCATION_AREA string = "https://pokeapi.co/api/v2/location-area/"
+	PAGINATION             string = "?offset=0&limit=20"
+)
+
 type LocationArea struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`

@@ -83,6 +83,11 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 	return cachedEntry, ok
 }
 
+var mapConfig = Config{
+	Next:     pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
+	Previous: "",
+}
+
 func GetRegistry() map[string]Command {
 	return map[string]Command{
 		CMD_POKEDEX: {
@@ -101,7 +106,7 @@ func GetRegistry() map[string]Command {
 			Name:        "catch",
 			Description: "Try catch a Pokémon.",
 			Config: &Config{
-				Next: "https://pokeapi.co/api/v2/pokemon/",
+				Next: pokeapi.ENDPOINT_POKEMON,
 			},
 			Command: commandCatch,
 		},
@@ -109,7 +114,7 @@ func GetRegistry() map[string]Command {
 			Name:        "explore",
 			Description: "Shows the names of all the Pokémons located in an area in the Pokemon world.",
 			Config: &Config{
-				Next: "https://pokeapi.co/api/v2/location-area/",
+				Next: pokeapi.ENDPOINT_LOCATION_AREA,
 			},
 			Command: commandExplore,
 		},
@@ -153,11 +158,6 @@ func commandHelp(config *Config, c *Cache) error {
 		fmt.Printf("    %s \t%s\n", data.Name, data.Description)
 	}
 	return nil
-}
-
-var mapConfig = Config{
-	Next:     "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
-	Previous: "",
 }
 
 func commandMapForward(config *Config, c *Cache) error {
