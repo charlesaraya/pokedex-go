@@ -1,11 +1,14 @@
-package main
+package command
 
 import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
+
+	"github.com/charlesaraya/pokedex-go/pokeapi"
 )
 
 const (
@@ -29,10 +32,58 @@ type Command struct {
 	Name        string
 	Description string
 	Config      *Config
-	Command     func(*Config) error
+	Command     func(*Config, *Cache) error
 }
 
-func getRegistry() map[string]Command {
+type Cache struct {
+	CachedEntries map[string]*CacheEntry
+	Pokedex       *pokeapi.Pokedex
+	Mu            sync.RWMutex
+}
+
+type CacheEntry struct {
+	CreatedAt time.Time
+	Val       []byte
+}
+
+func NewCache(interval time.Duration) *Cache {
+	var cache *Cache = &Cache{
+		CachedEntries: make(map[string]*CacheEntry),
+	}
+	go cache.reapLoop(interval)
+	return cache
+}
+
+func (c *Cache) reapLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	// run every tick interval
+	for range ticker.C {
+		for k, v := range c.CachedEntries {
+			// clean cached entries older than interval
+			if time.Since(v.CreatedAt) > interval {
+				delete(c.CachedEntries, k)
+			}
+		}
+	}
+}
+
+func (c *Cache) Add(key string, val []byte) {
+	c.Mu.Lock()
+	c.CachedEntries[key] = &CacheEntry{
+		CreatedAt: time.Now(),
+		Val:       val,
+	}
+	defer c.Mu.Unlock()
+}
+
+func (c *Cache) Get(key string) (*CacheEntry, bool) {
+	c.Mu.RLock()
+	cachedEntry, ok := c.CachedEntries[key]
+	defer c.Mu.RUnlock()
+	return cachedEntry, ok
+}
+
+func GetRegistry() map[string]Command {
 	return map[string]Command{
 		CMD_POKEDEX: {
 			Name:        "Pokedex",
@@ -87,14 +138,18 @@ func getRegistry() map[string]Command {
 	}
 }
 
-func commandExit(config *Config) error {
+func GetCommand(registry map[string]Command) Command {
+	return Command{}
+}
+
+func commandExit(config *Config, c *Cache) error {
 	defer os.Exit(0)
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	return nil
 }
 
-func commandHelp(config *Config) error {
-	registry := getRegistry()
+func commandHelp(config *Config, c *Cache) error {
+	registry := GetRegistry()
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("\nusage: <command>")
 	fmt.Printf("\nThese are common Pokedex commands used in various situations:\n\n")
@@ -109,29 +164,29 @@ var mapConfig = Config{
 	Previous: "",
 }
 
-func commandMapForward(config *Config) error {
+func commandMapForward(config *Config, c *Cache) error {
 	if config.Next == "" {
 		return fmt.Errorf("error: cant't map forward")
 	}
-	return Map(config, config.Next, CMD_MAP)
+	return Map(config, config.Next, CMD_MAP, c)
 }
 
-func commandMapBack(config *Config) error {
+func commandMapBack(config *Config, c *Cache) error {
 	if config.Previous == "" {
 		return fmt.Errorf("error: cant't map back")
 	}
-	return Map(config, config.Previous, CMD_MAPB)
+	return Map(config, config.Previous, CMD_MAPB, c)
 }
 
-func Map(config *Config, url string, cmd string) error {
-	var pokeLocationArea PokeLocationArea
-	cachedEntry, ok := PokeCache.Get(cmd)
+func Map(config *Config, url string, cmd string, c *Cache) error {
+	var pokeLocationArea pokeapi.PokeLocationArea
+	cachedEntry, ok := c.Get(cmd)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokeLocationArea); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
-		p, err := getLocationAreas(url)
+		p, err := pokeapi.GetLocationAreas(url)
 		if err != nil {
 			return fmt.Errorf("error: failed getting location areas (%w)", err)
 		}
@@ -140,7 +195,7 @@ func Map(config *Config, url string, cmd string) error {
 		if err != nil {
 			return fmt.Errorf("error: marshal operation failed: %w", err)
 		}
-		PokeCache.Add(cmd, data)
+		c.Add(cmd, data)
 
 		pokeLocationArea = p
 		// update config's pagination
@@ -154,18 +209,18 @@ func Map(config *Config, url string, cmd string) error {
 	return nil
 }
 
-func commandExplore(config *Config) error {
-	var pokemons []Pokemon
+func commandExplore(config *Config, c *Cache) error {
+	var pokemons []pokeapi.Pokemon
 
 	fullCommand := CMD_EXPLORE + config.Params[0]
-	cachedEntry, ok := PokeCache.Get(fullCommand)
+	cachedEntry, ok := c.Get(fullCommand)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokemons); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
 		fullUrl := config.Next + config.Params[0]
-		p, err := getPokemonsInLocationArea(fullUrl)
+		p, err := pokeapi.GetPokemonsInLocationArea(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
 		}
@@ -174,7 +229,7 @@ func commandExplore(config *Config) error {
 		if err != nil {
 			return fmt.Errorf("error: marshal operation failed: %w", err)
 		}
-		PokeCache.Add(fullCommand, pokemonsJsonData)
+		c.Add(fullCommand, pokemonsJsonData)
 
 		pokemons = p
 	}
@@ -185,18 +240,18 @@ func commandExplore(config *Config) error {
 	return nil
 }
 
-func commandCatch(config *Config) error {
-	var pokemon Pokemon
+func commandCatch(config *Config, c *Cache) error {
+	var pokemon pokeapi.Pokemon
 
 	fullCommand := CMD_EXPLORE + config.Params[0]
-	cachedEntry, ok := PokeCache.Get(fullCommand)
+	cachedEntry, ok := c.Get(fullCommand)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokemon); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
 		fullUrl := config.Next + config.Params[0]
-		p, err := getPokemon(fullUrl)
+		p, err := pokeapi.GetPokemon(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
 		}
@@ -205,7 +260,7 @@ func commandCatch(config *Config) error {
 		if err != nil {
 			return fmt.Errorf("error: marshal operation failed: %w", err)
 		}
-		PokeCache.Add(fullCommand, pokemonJsonData)
+		c.Add(fullCommand, pokemonJsonData)
 
 		pokemon = p
 	}
@@ -232,8 +287,8 @@ func commandCatch(config *Config) error {
 	// TODO: Add a formula that generates a decent Capture Probability
 	if rand.Float64() > 0.5 {
 		fmt.Printf("%s was caught!\n", pokemon.Name)
-		if _, ok := UserPokedex.Get(pokemon.Name); !ok {
-			UserPokedex.Add(pokemon)
+		if _, ok := c.Pokedex.Get(pokemon.Name); !ok {
+			c.Pokedex.Add(pokemon)
 		}
 	} else {
 		fmt.Printf("%s escaped!\n", pokemon.Name)
@@ -241,8 +296,8 @@ func commandCatch(config *Config) error {
 	return nil
 }
 
-func commandInspect(config *Config) error {
-	pokedexEntry, ok := UserPokedex.Get(config.Params[0])
+func commandInspect(config *Config, c *Cache) error {
+	pokedexEntry, ok := c.Pokedex.Get(config.Params[0])
 	if !ok {
 		fmt.Println("you have not caught that pokemon")
 		return nil
@@ -261,8 +316,8 @@ func commandInspect(config *Config) error {
 	return nil
 }
 
-func commandPokedex(config *Config) error {
-	pokemonNames := UserPokedex.GetAll()
+func commandPokedex(config *Config, c *Cache) error {
+	pokemonNames := c.Pokedex.GetAll()
 	if len(pokemonNames) == 0 {
 		fmt.Println("your Pokedex is empty... Try catch some Pokémons first!")
 	} else {

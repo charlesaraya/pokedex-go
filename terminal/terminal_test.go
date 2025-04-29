@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -35,6 +36,12 @@ func TestCleanInput(t *testing.T) {
 			}
 		}
 	}
+}
+
+func ExampleCleanInput() {
+	rawInput := CleanInput("Catch Pikachu  ")
+	fmt.Println(rawInput)
+	// Output: [catch pikachu]
 }
 
 func TestKeys(t *testing.T) {

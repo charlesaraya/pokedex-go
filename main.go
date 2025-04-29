@@ -5,15 +5,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/cache"
+	"github.com/charlesaraya/pokedex-go/command"
+	"github.com/charlesaraya/pokedex-go/pokeapi"
 	"github.com/charlesaraya/pokedex-go/terminal"
 )
 
-var duration, _ = time.ParseDuration("5s")
-var PokeCache = cache.NewCache(duration)
-var UserPokedex = NewPokedex()
-
 func main() {
+	var duration, _ = time.ParseDuration("5s")
+	var cache = command.NewCache(duration)
+	cache.Pokedex = pokeapi.NewPokedex()
+
 	err := terminal.EnableRawMode()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -70,14 +71,14 @@ func main() {
 				fmt.Println() // move to next line
 				// Check if the user entered a valid command
 				fullCommand := terminal.CleanInput(string(inputBuffer))
-				registry := getRegistry()
+				registry := command.GetRegistry()
 				isKnownCommand := false
 				for command, data := range registry {
 					if command == fullCommand[0] {
 						if len(fullCommand) > 1 {
 							data.Config.Params = fullCommand[1:]
 						}
-						if err := data.Command(data.Config); err != nil {
+						if err := data.Command(data.Config, cache); err != nil {
 							fmt.Printf("Error: %s command produced an error (%s)\n", command, err)
 						}
 						isKnownCommand = true

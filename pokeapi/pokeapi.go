@@ -1,4 +1,4 @@
-package main
+package pokeapi
 
 import (
 	"encoding/json"
@@ -87,7 +87,7 @@ func (p *Pokedex) GetAll() []string {
 	return pokemonNames
 }
 
-func getLocationAreas(endpoint string) (PokeLocationArea, error) {
+func GetLocationAreas(endpoint string) (PokeLocationArea, error) {
 	locationArea := PokeLocationArea{}
 
 	res, err := http.Get(endpoint)
@@ -108,7 +108,7 @@ func getLocationAreas(endpoint string) (PokeLocationArea, error) {
 	return locationArea, nil
 }
 
-func getPokemonsInLocationArea(endpoint string) ([]Pokemon, error) {
+func GetPokemonsInLocationArea(endpoint string) ([]Pokemon, error) {
 	// define response struct
 	var pokemonEncounters struct {
 		Encounters []struct {
@@ -138,7 +138,7 @@ func getPokemonsInLocationArea(endpoint string) ([]Pokemon, error) {
 	return pokemons, nil
 }
 
-func getPokemon(endpoint string) (Pokemon, error) {
+func GetPokemon(endpoint string) (Pokemon, error) {
 	pokemon := Pokemon{}
 
 	res, err := http.Get(endpoint)
