@@ -25,9 +25,10 @@ func main() {
 	commandHistory, historyIdx := terminal.InitCommandHistory()
 	inputBuffer, cursor := terminal.InitBuffer()
 	buf := make([]byte, 3)
+	registry := command.GetRegistry()
 
-	terminal.RedrawLine(inputBuffer, cursor)
 	for {
+		terminal.RedrawLine(inputBuffer, cursor)
 		if _, err := os.Stdin.Read(buf); err != nil {
 			fmt.Println("Error reading:", err)
 			break
@@ -42,7 +43,6 @@ func main() {
 				}
 				historyIdx--
 				terminal.UpdateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
-				terminal.RedrawLine(inputBuffer, cursor)
 			}
 		case terminal.KEY_DOWN:
 			if historyIdx < len(commandHistory) {
@@ -53,49 +53,35 @@ func main() {
 				} else {
 					terminal.UpdateBuffer(commandHistory[historyIdx], &inputBuffer, &cursor)
 				}
-				terminal.RedrawLine(inputBuffer, cursor)
 			}
 		case terminal.KEY_RIGHT:
 			terminal.MoveCursorRight(&cursor, len(inputBuffer))
 		case terminal.KEY_LEFT:
 			terminal.MoveCursorLeft(&cursor)
 		case terminal.KEY_BACKSPACE:
-			if ok := terminal.DeleteFromBuffer(&inputBuffer, &cursor); ok {
-				terminal.RedrawLine(inputBuffer, cursor)
-			}
+			terminal.DeleteFromBuffer(&inputBuffer, &cursor)
 		case terminal.KEY_PRINTABLE:
 			terminal.AddToBuffer(rune(buf[0]), &inputBuffer, &cursor)
-			terminal.RedrawLine(inputBuffer, cursor)
 		case terminal.KEY_ENTER:
 			if len(inputBuffer) > 0 {
 				fmt.Println() // move to next line
 				// Check if the user entered a valid command
 				fullCommand := terminal.CleanInput(string(inputBuffer))
-				registry := command.GetRegistry()
-				isKnownCommand := false
-				for command, data := range registry {
-					if command == fullCommand[0] {
-						if len(fullCommand) > 1 {
-							data.Config.Params = fullCommand[1:]
-						}
-						if err := data.Command(data.Config, cache); err != nil {
-							fmt.Printf("Error: %s command produced an error (%s)\n", command, err)
-						}
-						isKnownCommand = true
-					}
-				}
-				if !isKnownCommand {
+				command, ok := registry[fullCommand[0]]
+				if !ok {
 					fmt.Println("Unknown command")
+				} else {
+					if len(fullCommand) > 1 {
+						command.Config.Params = fullCommand[1:]
+					}
+					if err := command.Command(command.Config, cache); err != nil {
+						fmt.Printf("Error: %s command produced an error (%s)\n", command.Name, err)
+					}
+					terminal.AddCommand(string(inputBuffer), &commandHistory, &historyIdx)
 				}
-				terminal.AddCommand(string(inputBuffer), &commandHistory, &historyIdx)
-				terminal.ResetBuffer(&inputBuffer, &cursor)
-				terminal.RedrawLine(inputBuffer, cursor)
-				continue
 			}
 			historyIdx = len(commandHistory)
-			fmt.Println()
-			terminal.RedrawLine(inputBuffer, cursor)
+			terminal.ResetBuffer(&inputBuffer, &cursor)
 		}
 	}
-
 }

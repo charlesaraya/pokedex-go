@@ -138,10 +138,6 @@ func GetRegistry() map[string]Command {
 	}
 }
 
-func GetCommand(registry map[string]Command) Command {
-	return Command{}
-}
-
 func commandExit(config *Config, c *Cache) error {
 	defer os.Exit(0)
 	fmt.Println("Closing the Pokedex... Goodbye!")
