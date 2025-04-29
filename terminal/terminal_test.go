@@ -105,7 +105,7 @@ func TestBuffer(t *testing.T) {
 		}
 	})
 
-	t.Run("update buffer", func(t *testing.T) {
+	t.Run("add to buffer", func(t *testing.T) {
 		gotBuffer := []rune("hell")
 		gotCursor := 4
 		AddToBuffer(rune('o'), &gotBuffer, &gotCursor)
@@ -118,6 +118,47 @@ func TestBuffer(t *testing.T) {
 			t.Errorf("got %q want %q", gotCursor, wantCursor)
 		}
 	})
+	t.Run("update buffer", func(t *testing.T) {
+		gotBuffer := []rune("hell")
+		gotCursor := 4
+		gotString := "world!"
+		UpdateBuffer(gotString, &gotBuffer, &gotCursor)
+		wantBuffer := []rune("world!")
+		wantCursor := 6
+		if string(gotBuffer) != string(wantBuffer) {
+			t.Errorf("got %q want %q", gotBuffer, wantBuffer)
+		}
+		if gotCursor != wantCursor {
+			t.Errorf("got %q want %q", gotCursor, wantCursor)
+		}
+	})
+	t.Run("delete buffer", func(t *testing.T) {
+		gotBuffer := []rune("hello world!")
+		gotCursor := 6
+		DeleteFromBuffer(&gotBuffer, &gotCursor)
+		wantBuffer := []rune("helloworld!")
+		wantCursor := 5
+		if string(gotBuffer) != string(wantBuffer) {
+			t.Errorf("got %q want %q", gotBuffer, wantBuffer)
+		}
+		if gotCursor != wantCursor {
+			t.Errorf("got %q want %q", gotCursor, wantCursor)
+		}
+	})
+	t.Run("delete buffer fail", func(t *testing.T) {
+		gotBuffer := []rune("hello world!")
+		gotCursor := 0
+		DeleteFromBuffer(&gotBuffer, &gotCursor)
+		wantBuffer := []rune("hello world!")
+		wantCursor := 0
+		if string(gotBuffer) != string(wantBuffer) {
+			t.Errorf("got %q want %q", gotBuffer, wantBuffer)
+		}
+		if gotCursor != wantCursor {
+			t.Errorf("got %q want %q", gotCursor, wantCursor)
+		}
+	})
+
 	t.Run("reset buffer", func(t *testing.T) {
 		gotBuffer := []rune("hell")
 		gotCursor := 4
