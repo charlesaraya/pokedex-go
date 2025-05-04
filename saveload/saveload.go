@@ -39,6 +39,15 @@ func Save(p *pokeapi.Pokedex, dirName string) error {
 	return nil
 }
 
-func Load() (*pokeapi.Pokedex, error) {
-	return nil, nil
+func Load(dirName string) (*pokeapi.Pokedex, error) {
+	var pokedex *pokeapi.Pokedex
+	filePath := filepath.Join(".", dirName, SAVE_FILE_NAME)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file %w", err)
+	}
+	if err := json.Unmarshal(data, &pokedex); err != nil {
+		return nil, fmt.Errorf("error: unmarshal operation failed: %w", err)
+	}
+	return pokedex, nil
 }

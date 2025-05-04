@@ -22,6 +22,7 @@ const (
 	CMD_INSPECT string = "inspect"
 	CMD_POKEDEX string = "pokedex"
 	CMD_SAVE    string = "save"
+	CMD_LOAD    string = "load"
 )
 
 type Config struct {
@@ -91,6 +92,12 @@ func GetRegistry() map[string]Command {
 		Previous: "",
 	}
 	return map[string]Command{
+		CMD_LOAD: {
+			Name:        "load",
+			Description: "Loads previous game.",
+			Config:      &Config{},
+			Command:     commandLoad,
+		},
 		CMD_SAVE: {
 			Name:        "save",
 			Description: "Save current game.",
@@ -336,5 +343,14 @@ func commandSave(config *Config, c *Cache) error {
 	if err := saveload.Save(c.Pokedex, saveload.DATA_DIR); err != nil {
 		return fmt.Errorf("error saving pokedex %w", err)
 	}
+	return nil
+}
+
+func commandLoad(config *Config, c *Cache) error {
+	pokedex, err := saveload.Load(saveload.DATA_DIR)
+	if err != nil {
+		return fmt.Errorf("error loading game %w", err)
+	}
+	c.Pokedex = pokedex
 	return nil
 }
