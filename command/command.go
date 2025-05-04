@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/charlesaraya/pokedex-go/pokeapi"
+	"github.com/charlesaraya/pokedex-go/saveload"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 	CMD_CATCH   string = "catch"
 	CMD_INSPECT string = "inspect"
 	CMD_POKEDEX string = "pokedex"
+	CMD_SAVE    string = "save"
 )
 
 type Config struct {
@@ -89,6 +91,12 @@ func GetRegistry() map[string]Command {
 		Previous: "",
 	}
 	return map[string]Command{
+		CMD_SAVE: {
+			Name:        "save",
+			Description: "Save current game.",
+			Config:      &Config{},
+			Command:     commandSave,
+		},
 		CMD_POKEDEX: {
 			Name:        "pokedex",
 			Description: "Show all Pokémon from the Pokedex.",
@@ -320,6 +328,13 @@ func commandPokedex(config *Config, c *Cache) error {
 		for _, name := range pokemonNames {
 			fmt.Printf("  - %s\n", name)
 		}
+	}
+	return nil
+}
+
+func commandSave(config *Config, c *Cache) error {
+	if err := saveload.Save(c.Pokedex, saveload.DATA_DIR); err != nil {
+		return fmt.Errorf("error saving pokedex %w", err)
 	}
 	return nil
 }
