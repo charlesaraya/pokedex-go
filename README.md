@@ -19,6 +19,11 @@ A Pokédex built as a command-line REPL! This project fetches real Pokémon data
 ### Personal Pokédex
 - `pokedex`: Lists all Pokémon you have caught so far.
 
+### Persistent Pokédex
+Your caught Pokémon are now saved to disk and automatically loaded on startup, allowing you to continue where you left off across sessions. No more starting over—your journey is saved!
+- `save`: Saves your Pokedex and all caught Pokémon you have caught so far.
+- `load`: Loads the last saved Pokedex to resume the game.
+
 ### Help and Exit Commands
 - `help`: Displays instructions and a list of available commands.
 - `exit`: Safely exits the REPL.
@@ -39,14 +44,16 @@ These features provide a more interactive and user-friendly experience when ente
 
 | Command              | Description                         |
 |----------------------|-------------------------------------|
-| `help`               | Show available commands            |
-| `exit`               | Exit the REPL                      |
-| `map`                | View the next 20 location areas    |
+| `help`               | Show available commands             |
+| `exit`               | Exit the REPL                       |
+| `map`                | View the next 20 location areas     |
 | `mapb`               | View the previous 20 location areas |
-| `explore <location>` | List Pokémon in a given location   |
-| `catch <pokemon>`    | Try to catch a Pokémon             |
+| `explore <location>` | List Pokémon in a given location    |
+| `catch <pokemon>`    | Try to catch a Pokémon              |
 | `inspect <pokemon>`  | View details about a caught Pokémon |
-| `pokedex`            | List all caught Pokémon            |
+| `pokedex`            | List all caught Pokémon             |
+| `save`               | Save your Pokedex                   |
+| `load`               | Load your latest saved Pokedex      |
 
 ## Improvement Ideas
 
@@ -55,7 +62,6 @@ These features provide a more interactive and user-friendly experience when ente
 - Refactor the codebase for better organization, readability, and testability.
 - Implement a party system where players can manage a team of Pokémon that can gain experience and level up.
 - Enable Pokémon evolution, allowing caught Pokémon to evolve after meeting certain conditions (e.g., time-based or level-based).
-- Persist user data by saving the Pokédex to disk, enabling progress to be saved between sessions.
 - Improve exploration by providing navigational choices (e.g., "left" or "right") rather than manually typing out area names.
 - Add random wild Pokémon encounters while exploring different locations.
 - Introduce different types of Poké Balls (e.g., Poké Balls, Great Balls, Ultra Balls) with varying catch rates to make capturing more strategic.
