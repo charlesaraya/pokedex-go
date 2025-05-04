@@ -21,7 +21,7 @@ func TestSaveGame(t *testing.T) {
 		if err := Save(pokedex, TEST_DIR); err != nil {
 			t.Errorf("error saving pokedex")
 		}
-		dirPath := filepath.Join("..", TEST_DIR)
+		dirPath := filepath.Join(".", TEST_DIR)
 		filePath := filepath.Join(dirPath, SAVE_FILE_NAME)
 		_, err := os.ReadFile(filePath)
 		if err != nil {

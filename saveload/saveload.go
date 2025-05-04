@@ -15,9 +15,9 @@ const (
 	SAVE_FILE_NAME string = "pokedex.json"
 )
 
-func Save(p *pokeapi.Pokedex, dir string) error {
+func Save(p *pokeapi.Pokedex, dirName string) error {
 	// Ensure folder exists
-	dirPath := filepath.Join(".", dir)
+	dirPath := filepath.Join(".", dirName)
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error: creating folder %w", err)
