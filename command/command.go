@@ -2,7 +2,6 @@ package command
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -14,17 +13,19 @@ import (
 )
 
 const (
-	CMD_MAP      string = "map"
-	CMD_MAPB     string = "mapb"
-	CMD_HELP     string = "help"
-	CMD_EXIT     string = "exit"
-	CMD_EXPLORE  string = "explore"
-	CMD_CATCH    string = "catch"
-	CMD_INSPECT  string = "inspect"
-	CMD_POKEDEX  string = "pokedex"
-	CMD_SAVE     string = "save"
-	CMD_LOAD     string = "load"
-	CMD_WHEREAMI string = "whereami"
+	CMD_MAP         string = "map"
+	CMD_MAPB        string = "mapb"
+	CMD_HELP        string = "help"
+	CMD_EXIT        string = "exit"
+	CMD_EXPLORE     string = "explore"
+	CMD_CATCH       string = "catch"
+	CMD_INSPECT     string = "inspect"
+	CMD_POKEDEX     string = "pokedex"
+	CMD_SAVE        string = "save"
+	CMD_LOAD        string = "load"
+	CMD_WHEREAMI    string = "whereami"
+	FLAG_WHEREAMI_R string = "-r"
+	FLAG_WHEREAMI_L string = "-l"
 )
 
 type Config struct {
@@ -33,9 +34,15 @@ type Config struct {
 	Params   []string
 }
 
+type Flag struct {
+	Name        string
+	Description string
+}
+
 type Command struct {
 	Name        string
 	Description string
+	Flags       []Flag
 	Config      *Config
 	Command     func(*Config, *Cache) error
 }
@@ -96,9 +103,21 @@ func GetRegistry() map[string]Command {
 	return map[string]Command{
 		CMD_WHEREAMI: {
 			Name:        "whereami",
-			Description: "Shows the current location area the player is in.",
-			Config:      &Config{},
-			Command:     commandWhereAmI,
+			Description: "Shows the player's current location area.",
+			Flags: []Flag{
+				{
+					Name:        "-r",
+					Description: "Shows the current region instead.",
+				},
+				{
+					Name:        "-l",
+					Description: "Shows the current location instead.",
+				},
+			},
+			Config: &Config{
+				Params: []string{},
+			},
+			Command: commandWhereAmI,
 		},
 		CMD_LOAD: {
 			Name:        "load",
@@ -178,6 +197,9 @@ func commandHelp(config *Config, c *Cache) error {
 	fmt.Printf("\nThese are common Pokedex commands used in various situations:\n\n")
 	for _, data := range registry {
 		fmt.Printf("    %s \t%s\n", data.Name, data.Description)
+		for _, flag := range data.Flags {
+			fmt.Printf("    \t\t%s \t%s\n", flag.Name, flag.Description)
+		}
 	}
 	return nil
 }
@@ -365,8 +387,17 @@ func commandLoad(config *Config, c *Cache) error {
 
 func commandWhereAmI(config *Config, c *Cache) error {
 	locationArea := c.Pokedex.CurrentLocation.LocationArea
-	if locationArea == "" {
-		return fmt.Errorf("error whereami %w", errors.New("unknown location"))
+	if len(config.Params) > 0 {
+		flag := config.Params[0]
+		switch flag {
+		case FLAG_WHEREAMI_R:
+			fmt.Printf("%s\n", c.Pokedex.CurrentLocation.Region)
+		case FLAG_WHEREAMI_L:
+			fmt.Printf("%s\n", c.Pokedex.CurrentLocation.Location)
+		default:
+			fmt.Printf("%s\n", locationArea)
+		}
+		return nil
 	}
 	fmt.Printf("%s\n", locationArea)
 	return nil
