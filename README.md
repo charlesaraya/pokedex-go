@@ -58,8 +58,6 @@ These features provide a more interactive and user-friendly experience when ente
 ## Improvement Ideas
 
 - Introduce Pokémon battles, allowing players to simulate fights between their caught Pokémon.
-- Expand unit test coverage to ensure better reliability and stability.
-- Refactor the codebase for better organization, readability, and testability.
 - Implement a party system where players can manage a team of Pokémon that can gain experience and level up.
 - Enable Pokémon evolution, allowing caught Pokémon to evolve after meeting certain conditions (e.g., time-based or level-based).
 - Improve exploration by providing navigational choices (e.g., "left" or "right") rather than manually typing out area names.
