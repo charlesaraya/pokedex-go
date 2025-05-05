@@ -2,6 +2,7 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,16 +14,17 @@ import (
 )
 
 const (
-	CMD_MAP     string = "map"
-	CMD_MAPB    string = "mapb"
-	CMD_HELP    string = "help"
-	CMD_EXIT    string = "exit"
-	CMD_EXPLORE string = "explore"
-	CMD_CATCH   string = "catch"
-	CMD_INSPECT string = "inspect"
-	CMD_POKEDEX string = "pokedex"
-	CMD_SAVE    string = "save"
-	CMD_LOAD    string = "load"
+	CMD_MAP      string = "map"
+	CMD_MAPB     string = "mapb"
+	CMD_HELP     string = "help"
+	CMD_EXIT     string = "exit"
+	CMD_EXPLORE  string = "explore"
+	CMD_CATCH    string = "catch"
+	CMD_INSPECT  string = "inspect"
+	CMD_POKEDEX  string = "pokedex"
+	CMD_SAVE     string = "save"
+	CMD_LOAD     string = "load"
+	CMD_WHEREAMI string = "whereami"
 )
 
 type Config struct {
@@ -92,6 +94,12 @@ func GetRegistry() map[string]Command {
 		Previous: "",
 	}
 	return map[string]Command{
+		CMD_WHEREAMI: {
+			Name:        "whereami",
+			Description: "Shows the current location area the player is in.",
+			Config:      &Config{},
+			Command:     commandWhereAmI,
+		},
 		CMD_LOAD: {
 			Name:        "load",
 			Description: "Loads previous game.",
@@ -352,5 +360,14 @@ func commandLoad(config *Config, c *Cache) error {
 		return fmt.Errorf("error loading game %w", err)
 	}
 	c.Pokedex = pokedex
+	return nil
+}
+
+func commandWhereAmI(config *Config, c *Cache) error {
+	locationArea := c.Pokedex.CurrentLocation.LocationArea
+	if locationArea == "" {
+		return fmt.Errorf("error whereami %w", errors.New("unknown location"))
+	}
+	fmt.Printf("%s\n", locationArea)
 	return nil
 }

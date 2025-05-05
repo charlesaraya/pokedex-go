@@ -13,6 +13,9 @@ const (
 	ENDPOINT_POKEMON       string = "https://pokeapi.co/api/v2/pokemon/"
 	ENDPOINT_LOCATION_AREA string = "https://pokeapi.co/api/v2/location-area/"
 	PAGINATION             string = "?offset=0&limit=20"
+	STARTING_REGION        string = "kanto"
+	STARTING_LOCATION      string = "pallet-town"
+	STARTING_LOCATION_AREA string = "pallet-town-area"
 )
 
 type LocationArea struct {
@@ -55,14 +58,26 @@ type PokedexEntry struct {
 	Pokemon   Pokemon
 }
 
+type Location struct {
+	Region       string
+	Location     string
+	LocationArea string
+}
+
 type Pokedex struct {
-	PokedexEntries map[string]*PokedexEntry
-	Mu             sync.RWMutex
+	PokedexEntries  map[string]*PokedexEntry
+	CurrentLocation Location
+	Mu              sync.RWMutex
 }
 
 func NewPokedex() *Pokedex {
 	var pokedex *Pokedex = &Pokedex{
 		PokedexEntries: make(map[string]*PokedexEntry),
+		CurrentLocation: Location{
+			Region:       STARTING_REGION,
+			Location:     STARTING_LOCATION,
+			LocationArea: STARTING_LOCATION_AREA,
+		},
 	}
 	return pokedex
 }

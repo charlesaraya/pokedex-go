@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"testing"
 	"time"
+
+	"github.com/charlesaraya/pokedex-go/pokeapi"
 )
 
 type cacheData struct {
@@ -48,4 +50,18 @@ func TestCache(t *testing.T) {
 			t.Errorf("Error [Cache.reapLoop]: reapLoop should have cleaned the cache after duration %vs", duration)
 		}
 	}
+}
+
+func TestCommands(t *testing.T) {
+	registry := GetRegistry()
+	duration, _ := time.ParseDuration("1s")
+	cache := NewCache(duration)
+	cache.Pokedex = pokeapi.NewPokedex()
+
+	t.Run("run whereami command", func(t *testing.T) {
+		command := registry[CMD_WHEREAMI]
+		if err := command.Command(command.Config, cache); err != nil {
+			t.Errorf("error whereami command")
+		}
+	})
 }
