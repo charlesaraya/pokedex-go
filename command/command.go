@@ -259,15 +259,20 @@ func Map(config *Config, url string, cmd string, c *Cache) error {
 
 func commandExplore(config *Config, c *Cache) error {
 	var pokemons []pokeapi.Pokemon
-
-	fullCommand := CMD_EXPLORE + config.Params[0]
+	var locationAreaName string
+	if len(config.Params) == 0 {
+		locationAreaName = c.Pokedex.CurrentLocation.LocationArea
+	} else {
+		locationAreaName = config.Params[0]
+	}
+	fullCommand := CMD_EXPLORE + locationAreaName
 	cachedEntry, ok := c.Get(fullCommand)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokemons); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
-		fullUrl := config.Next + config.Params[0]
+		fullUrl := config.Next + locationAreaName
 		p, err := pokeapi.GetPokemonsInLocationArea(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)

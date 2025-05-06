@@ -61,7 +61,14 @@ func TestCommands(t *testing.T) {
 	t.Run("run whereami command", func(t *testing.T) {
 		command := registry[CMD_WHEREAMI]
 		if err := command.Command(command.Config, cache); err != nil {
-			t.Errorf("error whereami command")
+			t.Errorf("error %q command", CMD_WHEREAMI)
+		}
+	})
+
+	t.Run("run explore command", func(t *testing.T) {
+		command := registry[CMD_EXPLORE]
+		if err := command.Command(command.Config, cache); err != nil {
+			t.Errorf("error %q command", CMD_EXPLORE)
 		}
 	})
 }
