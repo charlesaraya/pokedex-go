@@ -10,6 +10,7 @@ import (
 
 	"github.com/charlesaraya/pokedex-go/pokeapi"
 	"github.com/charlesaraya/pokedex-go/saveload"
+	"github.com/charlesaraya/pokedex-go/terminal"
 )
 
 const (
@@ -251,9 +252,11 @@ func Map(config *Config, url string, cmd string, c *Cache) error {
 		config.Previous = pokeLocationArea.Previous
 	}
 	// Print results
-	for _, result := range pokeLocationArea.Results {
-		fmt.Println(result.Name)
+	names := make([]string, len(pokeLocationArea.Results))
+	for i, result := range pokeLocationArea.Results {
+		names[i] = result.Name
 	}
+	terminal.PrettyPrint(names)
 	return nil
 }
 
@@ -287,9 +290,11 @@ func commandExplore(config *Config, c *Cache) error {
 		pokemons = p
 	}
 	// Print results
-	for _, pokemon := range pokemons {
-		fmt.Println(pokemon.Name)
+	names := make([]string, len(pokemons))
+	for i, pokemon := range pokemons {
+		names[i] = pokemon.Name
 	}
+	terminal.PrettyPrint(names)
 	return nil
 }
 
@@ -375,9 +380,7 @@ func commandPokedex(config *Config, c *Cache) error {
 		fmt.Println("your Pokedex is empty... Try catch some Pokémons first!")
 	} else {
 		fmt.Println("Your Pokedex:")
-		for _, name := range pokemonNames {
-			fmt.Printf("  - %s\n", name)
-		}
+		terminal.PrettyPrint(pokemonNames)
 	}
 	return nil
 }

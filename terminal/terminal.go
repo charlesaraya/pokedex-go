@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"text/tabwriter"
 	"unsafe"
 )
 
@@ -21,7 +22,12 @@ const (
 	KEY_UNKNOWN   string = "key_unknown"
 )
 
-const PROMPT string = "Pokedex > "
+const (
+	PROMPT      string = "Pokedex > "
+	MAX_COLS    int    = 3
+	MAX_ROWS    int    = 5
+	MAX_COL_PAD int    = 4
+)
 
 // Preprocesses a string and returns lowercased words
 func CleanInput(text string) []string {
@@ -167,4 +173,17 @@ func RedrawLine(buffer []rune, cursor int) {
 		back := len(buffer) - cursor
 		fmt.Printf("\033[%dD", back)
 	}
+}
+
+func PrettyPrint(list []string) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, MAX_COL_PAD, ' ', 0)
+
+	for i, item := range list {
+		fmt.Fprintf(w, "- %s\t", item)
+		if len(list) > MAX_ROWS && (i+1)%MAX_COLS == 0 {
+			fmt.Fprintln(w)
+		}
+	}
+	fmt.Fprintln(w)
+	w.Flush()
 }
