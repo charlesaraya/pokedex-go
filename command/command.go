@@ -26,6 +26,7 @@ const (
 	CMD_WHEREAMI    string = "whereami"
 	FLAG_WHEREAMI_R string = "-r"
 	FLAG_WHEREAMI_L string = "-l"
+	CMD_VISIT       string = "visit"
 )
 
 type Config struct {
@@ -97,10 +98,17 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 
 func GetRegistry() map[string]Command {
 	mapConfig := Config{
-		Next:     pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
-		Previous: "",
+		Next: pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
 	}
 	return map[string]Command{
+		CMD_VISIT: {
+			Name:        "visit",
+			Description: "Visits a location area.",
+			Config: &Config{
+				Next: pokeapi.ENDPOINT_LOCATION_AREA,
+			},
+			Command: commandVisit,
+		},
 		CMD_WHEREAMI: {
 			Name:        "whereami",
 			Description: "Shows the player's current location area.",
@@ -219,7 +227,7 @@ func commandMapBack(config *Config, c *Cache) error {
 }
 
 func Map(config *Config, url string, cmd string, c *Cache) error {
-	var pokeLocationArea pokeapi.PokeLocationArea
+	var pokeLocationArea pokeapi.LocationAreas
 	cachedEntry, ok := c.Get(cmd)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokeLocationArea); err != nil {
@@ -400,5 +408,36 @@ func commandWhereAmI(config *Config, c *Cache) error {
 		return nil
 	}
 	fmt.Printf("%s\n", locationArea)
+	return nil
+}
+
+func commandVisit(config *Config, c *Cache) error {
+	if len(config.Params) == 0 {
+		return fmt.Errorf("received no argument")
+	}
+	var LocationArea pokeapi.LocationArea
+	locaAreaName := config.Params[0]
+	fullCommand := CMD_VISIT + " " + locaAreaName
+	cachedEntry, ok := c.Get(fullCommand)
+	if ok {
+		if err := json.Unmarshal(cachedEntry.Val, &LocationArea); err != nil {
+			return fmt.Errorf("failed to unmarshal location area: %w", err)
+		}
+		c.Pokedex.CurrentLocation.LocationArea = LocationArea.Name
+		c.Pokedex.CurrentLocation.Location = LocationArea.Location.Name
+	} else {
+		fullUrl := config.Next + locaAreaName
+		locationArea, err := pokeapi.GetLocationArea(fullUrl)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve location area: %w", err)
+		}
+		data, err := json.Marshal(locationArea)
+		if err != nil {
+			return fmt.Errorf("failed to marshal location area: %w", err)
+		}
+		c.Add(fullCommand, data)
+		c.Pokedex.CurrentLocation.LocationArea = locationArea.Name
+		c.Pokedex.CurrentLocation.Location = locationArea.Location.Name
+	}
 	return nil
 }

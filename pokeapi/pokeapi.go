@@ -12,22 +12,36 @@ import (
 const (
 	ENDPOINT_POKEMON       string = "https://pokeapi.co/api/v2/pokemon/"
 	ENDPOINT_LOCATION_AREA string = "https://pokeapi.co/api/v2/location-area/"
+	ENDPOINT_LOCATION      string = "https://pokeapi.co/api/v2/location/"
 	PAGINATION             string = "?offset=0&limit=20"
 	STARTING_REGION        string = "kanto"
 	STARTING_LOCATION      string = "pallet-town"
 	STARTING_LOCATION_AREA string = "pallet-town-area"
 )
 
-type LocationArea struct {
+type NamedResource struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
-type PokeLocationArea struct {
-	Count    int            `json:"count"`
-	Next     string         `json:"next"`
-	Previous string         `json:"previous"`
-	Results  []LocationArea `json:"results"`
+type LocationArea struct {
+	Name     string        `json:"name"`
+	URL      string        `json:"url"`
+	Location NamedResource `json:"location"`
+}
+
+type LocationAreas struct {
+	Count    int             `json:"count"`
+	Next     string          `json:"next"`
+	Previous string          `json:"previous"`
+	Results  []NamedResource `json:"results"`
+}
+
+type Location struct {
+	Name   string          `json:"name"`
+	URL    string          `json:"url"`
+	Areas  []NamedResource `json:"areas"`
+	Region NamedResource   `json:"region"`
 }
 
 type Pokemon struct {
@@ -58,7 +72,7 @@ type PokedexEntry struct {
 	Pokemon   Pokemon
 }
 
-type Location struct {
+type PlayerLocation struct {
 	Region       string
 	Location     string
 	LocationArea string
@@ -66,14 +80,14 @@ type Location struct {
 
 type Pokedex struct {
 	PokedexEntries  map[string]*PokedexEntry
-	CurrentLocation Location
+	CurrentLocation PlayerLocation
 	Mu              sync.RWMutex
 }
 
 func NewPokedex() *Pokedex {
 	var pokedex *Pokedex = &Pokedex{
 		PokedexEntries: make(map[string]*PokedexEntry),
-		CurrentLocation: Location{
+		CurrentLocation: PlayerLocation{
 			Region:       STARTING_REGION,
 			Location:     STARTING_LOCATION,
 			LocationArea: STARTING_LOCATION_AREA,
@@ -108,8 +122,29 @@ func (p *Pokedex) GetAll() []string {
 	return pokemonNames
 }
 
-func GetLocationAreas(endpoint string) (PokeLocationArea, error) {
-	locationArea := PokeLocationArea{}
+func GetLocationArea(endpoint string) (LocationArea, error) {
+	locationArea := LocationArea{}
+
+	res, err := http.Get(endpoint)
+	if err != nil {
+		return locationArea, fmt.Errorf("failed to get response %w", err)
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return locationArea, fmt.Errorf("failed to read the response body: %w", err)
+	}
+	if res.StatusCode > 299 {
+		return locationArea, fmt.Errorf("failed response with status code: %d", res.StatusCode)
+	}
+	if err := json.Unmarshal(body, &locationArea); err != nil {
+		return locationArea, fmt.Errorf("failed to unmarshal location area: %w", err)
+	}
+	return locationArea, nil
+}
+
+func GetLocationAreas(endpoint string) (LocationAreas, error) {
+	locationArea := LocationAreas{}
 
 	res, err := http.Get(endpoint)
 	if err != nil {

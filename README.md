@@ -6,9 +6,8 @@ A Pokédex built as a command-line REPL! This project fetches real Pokémon data
 ### Explore the Pokémon World
 - `map`: Displays the names of 20 location areas from the Pokémon world. Each call shows the next 20.
 - `mapb`: (map back) Displays the previous 20 locations.
-
-### Location Exploration
-- `explore <location>`: Lists all the Pokémon found in a given location area.
+- `visit <location-area>`: Visits a given location area in the Pokémon world.
+- `explore <location-area>`: Lists all Pokémon that live in a given location area.
 
 ### Catch Pokémon
  - `catch <pokemon>`: Attempts to catch a Pokémon by name using a simulated Pokéball throw. Successful catches add the Pokémon to your personal Pokédex.
@@ -48,6 +47,7 @@ These features provide a more interactive and user-friendly experience when ente
 | `exit`               | Exit the REPL                       |
 | `map`                | View the next 20 location areas     |
 | `mapb`               | View the previous 20 location areas |
+| `visit <location>`   | Visit an existing location area     |
 | `explore <location>` | List Pokémon in a given location    |
 | `catch <pokemon>`    | Try to catch a Pokémon              |
 | `inspect <pokemon>`  | View details about a caught Pokémon |
