@@ -17,7 +17,7 @@ func main() {
 
 	err := terminal.EnableRawMode()
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error: failed to terminal enable raw mode", err)
 		return
 	}
 	defer terminal.DisableRawMode()
@@ -30,7 +30,7 @@ func main() {
 	for {
 		terminal.RedrawLine(inputBuffer, cursor)
 		if _, err := os.Stdin.Read(buf); err != nil {
-			fmt.Println("Error reading:", err)
+			fmt.Println("Error: failed reading from input buffer:", err)
 			break
 		}
 		switch terminal.GetKey(buf) {
@@ -69,13 +69,13 @@ func main() {
 				fullCommand := terminal.CleanInput(string(inputBuffer))
 				command, ok := registry[fullCommand[0]]
 				if !ok {
-					fmt.Println("Unknown command")
+					fmt.Printf("Error: unknown command %q\n", fullCommand[0])
 				} else {
 					if len(fullCommand) > 1 {
 						command.Config.Params = fullCommand[1:]
 					}
 					if err := command.Command(command.Config, cache); err != nil {
-						fmt.Printf("Error: %s command produced an error (%s)\n", command.Name, err)
+						fmt.Printf("Error: %s command produced an error: %s\n", command.Name, err)
 					}
 					terminal.AddCommand(string(inputBuffer), &commandHistory, &historyIdx)
 				}
