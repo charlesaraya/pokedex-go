@@ -54,6 +54,11 @@ type Pokemon struct {
 	Types      []PokemonType `json:"types"`
 }
 
+type PokemonEncounter struct {
+	Name   string
+	Chance int
+}
+
 type PokemonStat struct {
 	Stat struct {
 		Name string `json:"name"`
@@ -162,6 +167,44 @@ func GetLocationAreas(endpoint string) (LocationAreas, error) {
 		return locationArea, fmt.Errorf("error: unmarshal operation failed: %w", err)
 	}
 	return locationArea, nil
+}
+
+func GetPokemonEncounters(endpoint string) ([]PokemonEncounter, error) {
+	var pokemonEncounters struct {
+		Encounters []struct {
+			Pokemon struct {
+				Name string `json:"name"`
+			} `json:"pokemon"`
+			VersionDetails []struct {
+				Chance int `json:"max_chance"`
+			} `json:"version_details"`
+		} `json:"pokemon_encounters"`
+	}
+	encounters := []PokemonEncounter{}
+
+	res, err := http.Get(endpoint)
+	if err != nil {
+		return encounters, fmt.Errorf("error: failed getting response %w", err)
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return encounters, fmt.Errorf("error: reading body from response: %w", err)
+	}
+	if res.StatusCode > 299 {
+		return encounters, fmt.Errorf("error: response failed with status code: %d", res.StatusCode)
+	}
+	if err := json.Unmarshal(body, &pokemonEncounters); err != nil {
+		return encounters, fmt.Errorf("error: unmarshal operation failed: %w", err)
+	}
+	for _, e := range pokemonEncounters.Encounters {
+		encounter := PokemonEncounter{
+			Name: e.Pokemon.Name,
+			//Chance: e.VersionDetails.Chance,
+		}
+		encounters = append(encounters, encounter)
+	}
+	return encounters, nil
 }
 
 func GetPokemonsInLocationArea(endpoint string) ([]Pokemon, error) {

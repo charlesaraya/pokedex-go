@@ -28,6 +28,7 @@ const (
 	FLAG_WHEREAMI_R string = "-r"
 	FLAG_WHEREAMI_L string = "-l"
 	CMD_VISIT       string = "visit"
+	CMD_ENCOUNTER   string = "encounter"
 )
 
 type Config struct {
@@ -102,6 +103,14 @@ func GetRegistry() map[string]Command {
 		Next: pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
 	}
 	return map[string]Command{
+		CMD_ENCOUNTER: {
+			Name:        "encounter",
+			Description: "Triggers a random Pokémon encounter in the currently visited area.",
+			Config: &Config{
+				Next: pokeapi.ENDPOINT_LOCATION_AREA,
+			},
+			Command: commandEncounter,
+		},
 		CMD_VISIT: {
 			Name:        "visit",
 			Description: "Visits a location area.",
@@ -446,6 +455,26 @@ func commandVisit(config *Config, c *Cache) error {
 		c.Add(fullCommand, data)
 		c.Pokedex.CurrentLocation.LocationArea = locationArea.Name
 		c.Pokedex.CurrentLocation.Location = locationArea.Location.Name
+	}
+	return nil
+}
+
+func commandEncounter(config *Config, c *Cache) error {
+	var LocationArea pokeapi.LocationArea
+	cachedEntry, ok := c.Get(CMD_VISIT)
+	if ok {
+		if err := json.Unmarshal(cachedEntry.Val, &LocationArea); err != nil {
+			return fmt.Errorf("failed to unmarshall location area: %w", err)
+		}
+	} else {
+		fullEndpoint := config.Next + c.Pokedex.CurrentLocation.LocationArea
+		pokemonEncounters, err := pokeapi.GetPokemonEncounters(fullEndpoint)
+		if err != nil {
+			return fmt.Errorf("failed to get pokemon encounters: %w", err)
+		}
+		for i, encounter := range pokemonEncounters {
+			fmt.Printf("%v. Encounter: %s, Chance: %v%%\n", i, encounter.Name, encounter.Chance)
+		}
 	}
 	return nil
 }
