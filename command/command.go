@@ -473,34 +473,26 @@ func commandVisit(config *Config, c *Cache) error {
 }
 
 func commandEncounter(config *Config, c *Cache) error {
-	var LocationArea pokeapi.LocationArea
-	cachedEntry, ok := c.Get(CMD_VISIT)
-	if ok {
-		if err := json.Unmarshal(cachedEntry.Val, &LocationArea); err != nil {
-			return fmt.Errorf("failed to unmarshall location area: %w", err)
+	fullEndpoint := config.Next + c.Pokedex.CurrentLocation.LocationArea
+	pokemonEncounters, err := pokeapi.GetPokemonEncounters(fullEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to get pokemon encounters: %w", err)
+	}
+	// roulette wheel selection
+	cumulativeWeights := 0
+	for _, encounter := range pokemonEncounters {
+		cumulativeWeights += encounter.Chance
+	}
+	pick := rand.Intn(cumulativeWeights)
+	cumulativeWeights = 0
+	for _, encounter := range pokemonEncounters {
+		if pick >= cumulativeWeights && pick <= cumulativeWeights+encounter.Chance {
+			fmt.Printf("You encountered a %s!\n", encounter.Name)
+			// cache encounter
+			c.Add(CMD_ENCOUNTER, []byte(encounter.Name))
+			break
 		}
-	} else {
-		fullEndpoint := config.Next + c.Pokedex.CurrentLocation.LocationArea
-		pokemonEncounters, err := pokeapi.GetPokemonEncounters(fullEndpoint)
-		if err != nil {
-			return fmt.Errorf("failed to get pokemon encounters: %w", err)
-		}
-		// roulette wheel selection
-		cumulativeWeights := 0
-		for _, encounter := range pokemonEncounters {
-			cumulativeWeights += encounter.Chance
-		}
-		pick := rand.Intn(cumulativeWeights)
-		cumulativeWeights = 0
-		for _, encounter := range pokemonEncounters {
-			if pick >= cumulativeWeights && pick <= cumulativeWeights+encounter.Chance {
-				fmt.Printf("You encountered a %s!\n", encounter.Name)
-				// cache encounter
-				c.Add(CMD_ENCOUNTER, []byte(encounter.Name))
-				break
-			}
-			cumulativeWeights += encounter.Chance - 1
-		}
+		cumulativeWeights += encounter.Chance - 1
 	}
 	return nil
 }
