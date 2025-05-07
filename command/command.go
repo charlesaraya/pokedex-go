@@ -310,14 +310,27 @@ func commandExplore(config *Config, c *Cache) error {
 func commandCatch(config *Config, c *Cache) error {
 	var pokemon pokeapi.Pokemon
 
-	fullCommand := CMD_EXPLORE + config.Params[0]
+	var pokemonName string
+	if len(config.Params) == 0 {
+		cachedEntry, ok := c.Get(CMD_ENCOUNTER)
+		if ok {
+			pokemonName = string(cachedEntry.Val)
+		} else {
+			fmt.Print("Nothing to catch!\n")
+			return nil
+		}
+	} else {
+		pokemonName = config.Params[0]
+	}
+	fullCommand := CMD_EXPLORE + pokemonName
+
 	cachedEntry, ok := c.Get(fullCommand)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokemon); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
-		fullUrl := config.Next + config.Params[0]
+		fullUrl := config.Next + pokemonName
 		p, err := pokeapi.GetPokemon(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
