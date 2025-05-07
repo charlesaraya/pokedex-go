@@ -472,8 +472,21 @@ func commandEncounter(config *Config, c *Cache) error {
 		if err != nil {
 			return fmt.Errorf("failed to get pokemon encounters: %w", err)
 		}
-		for i, encounter := range pokemonEncounters {
-			fmt.Printf("%v. Encounter: %s, Chance: %v%%\n", i, encounter.Name, encounter.Chance)
+		// roulette wheel selection
+		cumulativeWeights := 0
+		for _, encounter := range pokemonEncounters {
+			cumulativeWeights += encounter.Chance
+		}
+		pick := rand.Intn(cumulativeWeights)
+		cumulativeWeights = 0
+		for _, encounter := range pokemonEncounters {
+			if pick >= cumulativeWeights && pick <= cumulativeWeights+encounter.Chance {
+				fmt.Printf("You encountered a %s!\n", encounter.Name)
+				// cache encounter
+				c.Add(CMD_ENCOUNTER, []byte(encounter.Name))
+				break
+			}
+			cumulativeWeights += encounter.Chance - 1
 		}
 	}
 	return nil

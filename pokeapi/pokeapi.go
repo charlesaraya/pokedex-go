@@ -176,6 +176,10 @@ func GetPokemonEncounters(endpoint string) ([]PokemonEncounter, error) {
 				Name string `json:"name"`
 			} `json:"pokemon"`
 			VersionDetails []struct {
+				EncounterDetails []struct {
+					MaxLevel int `json:"max_level"`
+					MinLevel int `json:"min_level"`
+				} `json:"encounter_details"`
 				Chance int `json:"max_chance"`
 			} `json:"version_details"`
 		} `json:"pokemon_encounters"`
@@ -199,8 +203,8 @@ func GetPokemonEncounters(endpoint string) ([]PokemonEncounter, error) {
 	}
 	for _, e := range pokemonEncounters.Encounters {
 		encounter := PokemonEncounter{
-			Name: e.Pokemon.Name,
-			//Chance: e.VersionDetails.Chance,
+			Name:   e.Pokemon.Name,
+			Chance: e.VersionDetails[0].Chance,
 		}
 		encounters = append(encounters, encounter)
 	}
