@@ -366,7 +366,7 @@ func commandCatch(config *Config, c *Cache) error {
 func commandInspect(config *Config, c *Cache) error {
 	pokedexEntry, ok := c.Pokedex.Get(config.Params[0])
 	if !ok {
-		fmt.Println("you have not caught that pokemon")
+		fmt.Println("You have not caught that pokemon")
 		return nil
 	}
 	fmt.Printf("Name: %s\n", pokedexEntry.Pokemon.Name)
