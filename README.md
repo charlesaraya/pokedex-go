@@ -1,37 +1,47 @@
 # CLI Pokédex
+
 A Pokédex built as a command-line REPL! This project fetches real Pokémon data using the PokéAPI, allowing users to explore, catch, and inspect Pokémon — all through simple commands in your terminal.
 
 ## Features
 
 ### Explore the Pokémon World
+
 - `map`: Displays the names of 20 location areas from the Pokémon world. Each call shows the next 20.
 - `mapb`: (map back) Displays the previous 20 locations.
 - `visit <location-area>`: Visits a given location area in the Pokémon world.
 - `explore <location-area>`: Lists all Pokémon that live in a given location area.
 
 ### Encounter and Catch Pokémon
- - `encounter`: Encounters a random Pokémon in the area based on their encounter chance. You can call `catch`right away (without Pokémon name) before it escapes.
+
+ - `encounter`: Encounters a random Pokémon in the area based on their encounter chance. Call `catch`right away (without Pokémon name) before it escapes.
  - `catch [<pokemon>]`: Attempts to catch a Pokémon by name using a simulated Pokéball throw. Successful catches will add the Pokémon to your personal Pokédex.
 
 ### Inspect Your Pokémon
+
 - `inspect <pokemon>`: View details (name, height, weight, stats, types) for any Pokémon you've successfully caught.
 
 ### Personal Pokédex
+
 - `pokedex`: Lists all Pokémon you have caught so far.
 
 ### Persistent Pokédex
+
 Your caught Pokémon are now saved to disk and automatically loaded on startup, allowing you to continue where you left off across sessions. No more starting over—your journey is saved!
+
 - `save`: Saves your Pokedex and all caught Pokémon you have caught so far.
 - `load`: Loads the last saved Pokedex to resume the game.
 
 ### Help and Exit Commands
+
 - `help`: Displays instructions and a list of available commands.
 - `exit`: Safely exits the REPL.
 
 ### Caching for Speed
+
 Responses from the PokéAPI are cached for faster access. Ensure safe concurrent access. Old cache entries are cleaned automatically using a Ticker-based system.
 
 ### CLI Enhancements for Text Navigation and Editing
+
 This enhancement allows for basic text manipulation in the terminal:
 
 - **Move Cursor Left/Right**: Navigate the cursor within the input text using the left and right arrow keys.
