@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/cache"
+	"github.com/charlesaraya/pokedex-go/internal/pokedex"
 	"github.com/charlesaraya/pokedex-go/internal/session"
 	"github.com/charlesaraya/pokedex-go/internal/terminal"
 )
@@ -47,55 +48,7 @@ type Command struct {
 	Description string
 	Flags       []Flag
 	Config      *Config
-	Command     func(*Config, *Cache) error
-}
-
-type Cache struct {
-	CachedEntries map[string]*CacheEntry
-	Pokedex       *api.Pokedex
-	Mu            sync.RWMutex
-}
-
-type CacheEntry struct {
-	CreatedAt time.Time
-	Val       []byte
-}
-
-func NewCache(interval time.Duration) *Cache {
-	var cache *Cache = &Cache{
-		CachedEntries: make(map[string]*CacheEntry),
-	}
-	go cache.reapLoop(interval)
-	return cache
-}
-
-func (c *Cache) reapLoop(interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	// run every tick interval
-	for range ticker.C {
-		for k, v := range c.CachedEntries {
-			// clean cached entries older than interval
-			if time.Since(v.CreatedAt) > interval {
-				delete(c.CachedEntries, k)
-			}
-		}
-	}
-}
-
-func (c *Cache) Add(key string, val []byte) {
-	c.Mu.Lock()
-	c.CachedEntries[key] = &CacheEntry{
-		CreatedAt: time.Now(),
-		Val:       val,
-	}
-	defer c.Mu.Unlock()
-}
-
-func (c *Cache) Get(key string) (*CacheEntry, bool) {
-	c.Mu.RLock()
-	cachedEntry, ok := c.CachedEntries[key]
-	defer c.Mu.RUnlock()
-	return cachedEntry, ok
+	Command     func(*Config, *cache.Cache) error
 }
 
 func GetRegistry() map[string]Command {
@@ -202,13 +155,13 @@ func GetRegistry() map[string]Command {
 	}
 }
 
-func commandExit(config *Config, c *Cache) error {
+func commandExit(config *Config, c *cache.Cache) error {
 	defer os.Exit(0)
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	return nil
 }
 
-func commandHelp(config *Config, c *Cache) error {
+func commandHelp(config *Config, c *cache.Cache) error {
 	registry := GetRegistry()
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("\nusage: <command>")
@@ -222,21 +175,21 @@ func commandHelp(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandMapForward(config *Config, c *Cache) error {
+func commandMapForward(config *Config, c *cache.Cache) error {
 	if config.Next == "" {
 		return fmt.Errorf("error: cant't map forward")
 	}
 	return Map(config, config.Next, CMD_MAP, c)
 }
 
-func commandMapBack(config *Config, c *Cache) error {
+func commandMapBack(config *Config, c *cache.Cache) error {
 	if config.Previous == "" {
 		return fmt.Errorf("error: cant't map back")
 	}
 	return Map(config, config.Previous, CMD_MAPB, c)
 }
 
-func Map(config *Config, url string, cmd string, c *Cache) error {
+func Map(config *Config, url string, cmd string, c *cache.Cache) error {
 	var pokeLocationArea api.LocationAreas
 	cachedEntry, ok := c.Get(cmd)
 	if ok {
@@ -269,8 +222,8 @@ func Map(config *Config, url string, cmd string, c *Cache) error {
 	return nil
 }
 
-func commandExplore(config *Config, c *Cache) error {
-	var pokemons []api.Pokemon
+func commandExplore(config *Config, c *cache.Cache) error {
+	var pokemons []pokedex.Pokemon
 	var locationAreaName string
 	if len(config.Params) == 0 {
 		locationAreaName = c.Pokedex.CurrentLocation.LocationArea
@@ -307,8 +260,8 @@ func commandExplore(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandCatch(config *Config, c *Cache) error {
-	var pokemon api.Pokemon
+func commandCatch(config *Config, c *cache.Cache) error {
+	var pokemon pokedex.Pokemon
 
 	var pokemonName string
 	if len(config.Params) == 0 {
@@ -376,7 +329,7 @@ func commandCatch(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandInspect(config *Config, c *Cache) error {
+func commandInspect(config *Config, c *cache.Cache) error {
 	pokedexEntry, ok := c.Pokedex.Get(config.Params[0])
 	if !ok {
 		fmt.Println("You have not caught that pokemon")
@@ -396,7 +349,7 @@ func commandInspect(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandPokedex(config *Config, c *Cache) error {
+func commandPokedex(config *Config, c *cache.Cache) error {
 	pokemonNames := c.Pokedex.GetAll()
 	if len(pokemonNames) == 0 {
 		fmt.Println("your Pokedex is empty... Try catch some Pokémons first!")
@@ -407,14 +360,14 @@ func commandPokedex(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandSave(config *Config, c *Cache) error {
+func commandSave(config *Config, c *cache.Cache) error {
 	if err := session.Save(c.Pokedex, session.DATA_DIR); err != nil {
 		return fmt.Errorf("error saving pokedex %w", err)
 	}
 	return nil
 }
 
-func commandLoad(config *Config, c *Cache) error {
+func commandLoad(config *Config, c *cache.Cache) error {
 	pokedex, err := session.Load(session.DATA_DIR)
 	if err != nil {
 		return fmt.Errorf("error loading game %w", err)
@@ -423,7 +376,7 @@ func commandLoad(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandWhereAmI(config *Config, c *Cache) error {
+func commandWhereAmI(config *Config, c *cache.Cache) error {
 	locationArea := c.Pokedex.CurrentLocation.LocationArea
 	if len(config.Params) > 0 {
 		flag := config.Params[0]
@@ -441,7 +394,7 @@ func commandWhereAmI(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandVisit(config *Config, c *Cache) error {
+func commandVisit(config *Config, c *cache.Cache) error {
 	if len(config.Params) == 0 {
 		return fmt.Errorf("received no argument")
 	}
@@ -472,7 +425,7 @@ func commandVisit(config *Config, c *Cache) error {
 	return nil
 }
 
-func commandEncounter(config *Config, c *Cache) error {
+func commandEncounter(config *Config, c *cache.Cache) error {
 	fullEndpoint := config.Next + c.Pokedex.CurrentLocation.LocationArea
 	pokemonEncounters, err := api.GetPokemonEncounters(fullEndpoint)
 	if err != nil {

@@ -1,24 +1,20 @@
-package main
+package pokedex
 
-import (
-	"testing"
-
-	"github.com/charlesaraya/pokedex-go/internal/api"
-)
+import "testing"
 
 func TestPokedex(t *testing.T) {
-	var pokedex = api.NewPokedex()
+	var pokedex = NewPokedex()
 
 	cases := []struct {
-		input    api.Pokemon
+		input    Pokemon
 		expected string
 	}{
 		{
-			input:    api.Pokemon{Name: "pikachu"},
+			input:    Pokemon{Name: "pikachu"},
 			expected: "pikachu",
 		},
 		{
-			input:    api.Pokemon{Name: "clefairy"},
+			input:    Pokemon{Name: "clefairy"},
 			expected: "clefairy",
 		},
 	}

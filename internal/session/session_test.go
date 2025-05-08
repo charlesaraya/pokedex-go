@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/pokedex"
 )
 
 func TestSaveGame(t *testing.T) {
-	pokedex := api.NewPokedex()
+	pokedex := pokedex.NewPokedex()
 	pikachu, err := api.GetPokemon(api.ENDPOINT_POKEMON + "pikachu")
 	if err != nil {
 		fmt.Printf("error: GetPokemon failed.")
@@ -30,8 +31,7 @@ func TestSaveGame(t *testing.T) {
 	})
 
 	t.Run("load pokedex", func(t *testing.T) {
-		var got *api.Pokedex
-		got, err = Load(TEST_DIR)
+		got, err := Load(TEST_DIR)
 		if err != nil {
 			t.Errorf("error loading test data")
 		}

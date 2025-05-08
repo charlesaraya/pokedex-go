@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/pokedex"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	SAVE_FILE_NAME string = "pokedex.json"
 )
 
-func Save(p *api.Pokedex, dirName string) error {
+func Save(p *pokedex.Pokedex, dirName string) error {
 	// Ensure folder exists
 	dirPath := filepath.Join(".", dirName)
 	err := os.MkdirAll(dirPath, os.ModePerm)
@@ -39,8 +39,8 @@ func Save(p *api.Pokedex, dirName string) error {
 	return nil
 }
 
-func Load(dirName string) (*api.Pokedex, error) {
-	var pokedex *api.Pokedex
+func Load(dirName string) (*pokedex.Pokedex, error) {
+	var pokedex *pokedex.Pokedex
 	filePath := filepath.Join(".", dirName, SAVE_FILE_NAME)
 	data, err := os.ReadFile(filePath)
 	if err != nil {

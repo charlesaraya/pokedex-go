@@ -5,15 +5,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/cache"
 	"github.com/charlesaraya/pokedex-go/internal/commands"
+	"github.com/charlesaraya/pokedex-go/internal/pokedex"
 	"github.com/charlesaraya/pokedex-go/internal/terminal"
 )
 
 func main() {
 	var duration, _ = time.ParseDuration("5s")
-	var cache = commands.NewCache(duration)
-	cache.Pokedex = api.NewPokedex()
+	var cache = cache.NewCache(duration)
+	cache.Pokedex = pokedex.NewPokedex()
 
 	err := terminal.EnableRawMode()
 	if err != nil {
