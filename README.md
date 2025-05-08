@@ -9,8 +9,9 @@ A Pokédex built as a command-line REPL! This project fetches real Pokémon data
 - `visit <location-area>`: Visits a given location area in the Pokémon world.
 - `explore <location-area>`: Lists all Pokémon that live in a given location area.
 
-### Catch Pokémon
- - `catch <pokemon>`: Attempts to catch a Pokémon by name using a simulated Pokéball throw. Successful catches add the Pokémon to your personal Pokédex.
+### Encounter and Catch Pokémon
+ - `encounter`: Encounters a random Pokémon in the area based on their encounter chance. You can call `catch`right away (without Pokémon name) before it escapes.
+ - `catch [<pokemon>]`: Attempts to catch a Pokémon by name using a simulated Pokéball throw. Successful catches will add the Pokémon to your personal Pokédex.
 
 ### Inspect Your Pokémon
 - `inspect <pokemon>`: View details (name, height, weight, stats, types) for any Pokémon you've successfully caught.
@@ -41,19 +42,21 @@ These features provide a more interactive and user-friendly experience when ente
 
 ## Commands Reference
 
-| Command              | Description                         |
-|----------------------|-------------------------------------|
-| `help`               | Show available commands             |
-| `exit`               | Exit the REPL                       |
-| `map`                | View the next 20 location areas     |
-| `mapb`               | View the previous 20 location areas |
-| `visit <location>`   | Visit an existing location area     |
-| `explore <location>` | List Pokémon in a given location    |
-| `catch <pokemon>`    | Try to catch a Pokémon              |
-| `inspect <pokemon>`  | View details about a caught Pokémon |
-| `pokedex`            | List all caught Pokémon             |
-| `save`               | Save your Pokedex                   |
-| `load`               | Load your latest saved Pokedex      |
+| Command                | Description                         |
+|------------------------|-------------------------------------|
+| `help`                 | Show available commands             |
+| `exit`                 | Exit the REPL                       |
+| `whereami [-l \| -r]`  | Shows your current location area, location (`-l`) or region (`-r`).     |
+| `map`                  | View the next 20 location areas     |
+| `mapb`                 | View the previous 20 location areas |
+| `visit <location>`     | Visit an existing location area     |
+| `explore <location>`   | List Pokémon in a given location    |
+| `encounter`            | Encounters a Pokémon in the area    |
+| `catch [<pokemon>]`    | Try to catch a Pokémon              |
+| `inspect <pokemon>`    | View details about a caught Pokémon |
+| `pokedex`              | List all caught Pokémon             |
+| `save`                 | Save your Pokedex                   |
+| `load`                 | Load your latest saved Pokedex      |
 
 ## Improvement Ideas
 
@@ -61,5 +64,4 @@ These features provide a more interactive and user-friendly experience when ente
 - Implement a party system where players can manage a team of Pokémon that can gain experience and level up.
 - Enable Pokémon evolution, allowing caught Pokémon to evolve after meeting certain conditions (e.g., time-based or level-based).
 - Improve exploration by providing navigational choices (e.g., "left" or "right") rather than manually typing out area names.
-- Add random wild Pokémon encounters while exploring different locations.
 - Introduce different types of Poké Balls (e.g., Poké Balls, Great Balls, Ultra Balls) with varying catch rates to make capturing more strategic.
