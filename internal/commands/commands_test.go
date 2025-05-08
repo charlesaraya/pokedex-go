@@ -1,11 +1,11 @@
-package command
+package commands
 
 import (
 	"bytes"
 	"testing"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/pokeapi"
+	"github.com/charlesaraya/pokedex-go/internal/api"
 )
 
 type cacheData struct {
@@ -56,7 +56,7 @@ func TestCommands(t *testing.T) {
 	registry := GetRegistry()
 	duration, _ := time.ParseDuration("1s")
 	cache := NewCache(duration)
-	cache.Pokedex = pokeapi.NewPokedex()
+	cache.Pokedex = api.NewPokedex()
 
 	t.Run("run whereami command", func(t *testing.T) {
 		command := registry[CMD_WHEREAMI]

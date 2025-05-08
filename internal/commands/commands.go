@@ -1,4 +1,4 @@
-package command
+package commands
 
 import (
 	"encoding/json"
@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/pokeapi"
-	"github.com/charlesaraya/pokedex-go/saveload"
-	"github.com/charlesaraya/pokedex-go/terminal"
+	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/session"
+	"github.com/charlesaraya/pokedex-go/internal/terminal"
 )
 
 const (
@@ -52,7 +52,7 @@ type Command struct {
 
 type Cache struct {
 	CachedEntries map[string]*CacheEntry
-	Pokedex       *pokeapi.Pokedex
+	Pokedex       *api.Pokedex
 	Mu            sync.RWMutex
 }
 
@@ -100,14 +100,14 @@ func (c *Cache) Get(key string) (*CacheEntry, bool) {
 
 func GetRegistry() map[string]Command {
 	mapConfig := Config{
-		Next: pokeapi.ENDPOINT_LOCATION_AREA + pokeapi.PAGINATION,
+		Next: api.ENDPOINT_LOCATION_AREA + api.PAGINATION,
 	}
 	return map[string]Command{
 		CMD_ENCOUNTER: {
 			Name:        "encounter",
 			Description: "Triggers a random Pokémon encounter in the currently visited area.",
 			Config: &Config{
-				Next: pokeapi.ENDPOINT_LOCATION_AREA,
+				Next: api.ENDPOINT_LOCATION_AREA,
 			},
 			Command: commandEncounter,
 		},
@@ -115,7 +115,7 @@ func GetRegistry() map[string]Command {
 			Name:        "visit",
 			Description: "Visits a location area.",
 			Config: &Config{
-				Next: pokeapi.ENDPOINT_LOCATION_AREA,
+				Next: api.ENDPOINT_LOCATION_AREA,
 			},
 			Command: commandVisit,
 		},
@@ -165,7 +165,7 @@ func GetRegistry() map[string]Command {
 			Name:        "catch",
 			Description: "Try catch a Pokémon.",
 			Config: &Config{
-				Next: pokeapi.ENDPOINT_POKEMON,
+				Next: api.ENDPOINT_POKEMON,
 			},
 			Command: commandCatch,
 		},
@@ -173,7 +173,7 @@ func GetRegistry() map[string]Command {
 			Name:        "explore",
 			Description: "Shows the names of all the Pokémons located in an area in the Pokemon world.",
 			Config: &Config{
-				Next: pokeapi.ENDPOINT_LOCATION_AREA,
+				Next: api.ENDPOINT_LOCATION_AREA,
 			},
 			Command: commandExplore,
 		},
@@ -237,14 +237,14 @@ func commandMapBack(config *Config, c *Cache) error {
 }
 
 func Map(config *Config, url string, cmd string, c *Cache) error {
-	var pokeLocationArea pokeapi.LocationAreas
+	var pokeLocationArea api.LocationAreas
 	cachedEntry, ok := c.Get(cmd)
 	if ok {
 		if err := json.Unmarshal(cachedEntry.Val, &pokeLocationArea); err != nil {
 			return fmt.Errorf("error: unmarshal operation failed from cached entry: %w", err)
 		}
 	} else {
-		p, err := pokeapi.GetLocationAreas(url)
+		p, err := api.GetLocationAreas(url)
 		if err != nil {
 			return fmt.Errorf("error: failed getting location areas (%w)", err)
 		}
@@ -270,7 +270,7 @@ func Map(config *Config, url string, cmd string, c *Cache) error {
 }
 
 func commandExplore(config *Config, c *Cache) error {
-	var pokemons []pokeapi.Pokemon
+	var pokemons []api.Pokemon
 	var locationAreaName string
 	if len(config.Params) == 0 {
 		locationAreaName = c.Pokedex.CurrentLocation.LocationArea
@@ -285,7 +285,7 @@ func commandExplore(config *Config, c *Cache) error {
 		}
 	} else {
 		fullUrl := config.Next + locationAreaName
-		p, err := pokeapi.GetPokemonsInLocationArea(fullUrl)
+		p, err := api.GetPokemonsInLocationArea(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
 		}
@@ -308,7 +308,7 @@ func commandExplore(config *Config, c *Cache) error {
 }
 
 func commandCatch(config *Config, c *Cache) error {
-	var pokemon pokeapi.Pokemon
+	var pokemon api.Pokemon
 
 	var pokemonName string
 	if len(config.Params) == 0 {
@@ -331,7 +331,7 @@ func commandCatch(config *Config, c *Cache) error {
 		}
 	} else {
 		fullUrl := config.Next + pokemonName
-		p, err := pokeapi.GetPokemon(fullUrl)
+		p, err := api.GetPokemon(fullUrl)
 		if err != nil {
 			return fmt.Errorf("error: failed getting pokemons in location area (%w)", err)
 		}
@@ -408,14 +408,14 @@ func commandPokedex(config *Config, c *Cache) error {
 }
 
 func commandSave(config *Config, c *Cache) error {
-	if err := saveload.Save(c.Pokedex, saveload.DATA_DIR); err != nil {
+	if err := session.Save(c.Pokedex, session.DATA_DIR); err != nil {
 		return fmt.Errorf("error saving pokedex %w", err)
 	}
 	return nil
 }
 
 func commandLoad(config *Config, c *Cache) error {
-	pokedex, err := saveload.Load(saveload.DATA_DIR)
+	pokedex, err := session.Load(session.DATA_DIR)
 	if err != nil {
 		return fmt.Errorf("error loading game %w", err)
 	}
@@ -445,7 +445,7 @@ func commandVisit(config *Config, c *Cache) error {
 	if len(config.Params) == 0 {
 		return fmt.Errorf("received no argument")
 	}
-	var LocationArea pokeapi.LocationArea
+	var LocationArea api.LocationArea
 	locaAreaName := config.Params[0]
 	fullCommand := CMD_VISIT + " " + locaAreaName
 	cachedEntry, ok := c.Get(fullCommand)
@@ -457,7 +457,7 @@ func commandVisit(config *Config, c *Cache) error {
 		c.Pokedex.CurrentLocation.Location = LocationArea.Location.Name
 	} else {
 		fullUrl := config.Next + locaAreaName
-		locationArea, err := pokeapi.GetLocationArea(fullUrl)
+		locationArea, err := api.GetLocationArea(fullUrl)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve location area: %w", err)
 		}
@@ -474,7 +474,7 @@ func commandVisit(config *Config, c *Cache) error {
 
 func commandEncounter(config *Config, c *Cache) error {
 	fullEndpoint := config.Next + c.Pokedex.CurrentLocation.LocationArea
-	pokemonEncounters, err := pokeapi.GetPokemonEncounters(fullEndpoint)
+	pokemonEncounters, err := api.GetPokemonEncounters(fullEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to get pokemon encounters: %w", err)
 	}

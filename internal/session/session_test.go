@@ -1,4 +1,4 @@
-package saveload
+package session
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/charlesaraya/pokedex-go/pokeapi"
+	"github.com/charlesaraya/pokedex-go/internal/api"
 )
 
 func TestSaveGame(t *testing.T) {
-	pokedex := pokeapi.NewPokedex()
-	pikachu, err := pokeapi.GetPokemon(pokeapi.ENDPOINT_POKEMON + "pikachu")
+	pokedex := api.NewPokedex()
+	pikachu, err := api.GetPokemon(api.ENDPOINT_POKEMON + "pikachu")
 	if err != nil {
 		fmt.Printf("error: GetPokemon failed.")
 	}
@@ -30,7 +30,7 @@ func TestSaveGame(t *testing.T) {
 	})
 
 	t.Run("load pokedex", func(t *testing.T) {
-		var got *pokeapi.Pokedex
+		var got *api.Pokedex
 		got, err = Load(TEST_DIR)
 		if err != nil {
 			t.Errorf("error loading test data")

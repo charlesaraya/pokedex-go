@@ -5,15 +5,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/charlesaraya/pokedex-go/command"
-	"github.com/charlesaraya/pokedex-go/pokeapi"
-	"github.com/charlesaraya/pokedex-go/terminal"
+	"github.com/charlesaraya/pokedex-go/internal/api"
+	"github.com/charlesaraya/pokedex-go/internal/commands"
+	"github.com/charlesaraya/pokedex-go/internal/terminal"
 )
 
 func main() {
 	var duration, _ = time.ParseDuration("5s")
-	var cache = command.NewCache(duration)
-	cache.Pokedex = pokeapi.NewPokedex()
+	var cache = commands.NewCache(duration)
+	cache.Pokedex = api.NewPokedex()
 
 	err := terminal.EnableRawMode()
 	if err != nil {
@@ -25,7 +25,7 @@ func main() {
 	commandHistory, historyIdx := terminal.InitCommandHistory()
 	inputBuffer, cursor := terminal.InitBuffer()
 	buf := make([]byte, 3)
-	registry := command.GetRegistry()
+	registry := commands.GetRegistry()
 
 	for {
 		terminal.RedrawLine(inputBuffer, cursor)
@@ -67,15 +67,15 @@ func main() {
 				fmt.Println() // move to next line
 				// Check if the user entered a valid command
 				fullCommand := terminal.CleanInput(string(inputBuffer))
-				command, ok := registry[fullCommand[0]]
+				Cmd, ok := registry[fullCommand[0]]
 				if !ok {
 					fmt.Printf("Error: unknown command %q\n", fullCommand[0])
 				} else {
 					if len(fullCommand) > 1 {
-						command.Config.Params = fullCommand[1:]
+						Cmd.Config.Params = fullCommand[1:]
 					}
-					if err := command.Command(command.Config, cache); err != nil {
-						fmt.Printf("Error: %s command produced an error: %s\n", command.Name, err)
+					if err := Cmd.Command(Cmd.Config, cache); err != nil {
+						fmt.Printf("Error: %s command produced an error: %s\n", Cmd.Name, err)
 					}
 					terminal.AddCommand(string(inputBuffer), &commandHistory, &historyIdx)
 				}

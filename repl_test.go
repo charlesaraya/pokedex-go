@@ -3,22 +3,22 @@ package main
 import (
 	"testing"
 
-	"github.com/charlesaraya/pokedex-go/pokeapi"
+	"github.com/charlesaraya/pokedex-go/internal/api"
 )
 
 func TestPokedex(t *testing.T) {
-	var pokedex = pokeapi.NewPokedex()
+	var pokedex = api.NewPokedex()
 
 	cases := []struct {
-		input    pokeapi.Pokemon
+		input    api.Pokemon
 		expected string
 	}{
 		{
-			input:    pokeapi.Pokemon{Name: "pikachu"},
+			input:    api.Pokemon{Name: "pikachu"},
 			expected: "pikachu",
 		},
 		{
-			input:    pokeapi.Pokemon{Name: "clefairy"},
+			input:    api.Pokemon{Name: "clefairy"},
 			expected: "clefairy",
 		},
 	}
