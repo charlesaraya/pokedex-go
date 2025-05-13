@@ -101,3 +101,9 @@ These features provide a more interactive and user-friendly experience when ente
 - Enable Pokémon evolution, allowing caught Pokémon to evolve after meeting certain conditions (e.g., time-based or level-based).
 - Improve exploration by providing navigational choices (e.g., "left" or "right") rather than manually typing out area names.
 - Introduce different types of Poké Balls (e.g., Poké Balls, Great Balls, Ultra Balls) with varying catch rates to make capturing more strategic.
+
+## Contributing
+
+### Submit a pull request
+
+If you'd like to contribute, please fork the repository and open a pull request to the `main` branch.
