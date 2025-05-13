@@ -54,6 +54,7 @@ func GetLocationArea(endpoint string) (LocationArea, error) {
 		return locationArea, fmt.Errorf("failed to get response %w", err)
 	}
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return locationArea, fmt.Errorf("failed to read the response body: %w", err)
@@ -75,6 +76,7 @@ func GetLocationAreas(endpoint string) (LocationAreas, error) {
 		return locationArea, fmt.Errorf("error: failed getting response %w", err)
 	}
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return locationArea, fmt.Errorf("error: reading body from response: %w", err)
@@ -110,6 +112,7 @@ func GetPokemonEncounters(endpoint string) ([]PokemonEncounter, error) {
 		return encounters, fmt.Errorf("error: failed getting response %w", err)
 	}
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return encounters, fmt.Errorf("error: reading body from response: %w", err)
@@ -145,6 +148,7 @@ func GetPokemonsInLocationArea(endpoint string) ([]pokedex.Pokemon, error) {
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
+
 	if err != nil {
 		return pokemons, fmt.Errorf("error: reading body from response: %w", err)
 	}
@@ -168,6 +172,7 @@ func GetPokemon(endpoint string) (pokedex.Pokemon, error) {
 		return pokemon, fmt.Errorf("error: failed getting response %w", err)
 	}
 	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return pokemon, fmt.Errorf("error: reading body from response: %w", err)

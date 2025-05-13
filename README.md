@@ -1,6 +1,12 @@
-# CLI Pokédex
+# PokédexGo CLI
 
 A Pokédex built as a command-line REPL! This project fetches real Pokémon data using the PokéAPI, allowing users to explore, catch, and inspect Pokémon — all through simple commands in your terminal.
+
+## Motivation
+
+PokédexGo was born from the idea of turning a simple programming challenge into a hands-on experience in building interactive command-line applications with Go. It goes far beyond just fetching data from an API. It simulates a full Pokédex experience where Pokémon trainers can explore locations, encounter and catch Pokémon, and manage their collection across sessions. 
+
+The goal was to create something practical, nostalgic, and technically challenging with a fun, engaging context.
 
 ## Features
 
