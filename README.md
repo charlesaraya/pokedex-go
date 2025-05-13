@@ -8,6 +8,29 @@ PokédexGo was born from the idea of turning a simple programming challenge into
 
 The goal was to create something practical, nostalgic, and technically challenging with a fun, engaging context.
 
+## Getting Started
+
+### Clone & Run
+
+```bash
+git clone https://github.com/charlesaraya/pokedex-cli.git
+cd pokedex-cli
+go run ./cmd/pokedex
+```
+### Installing
+
+This assumes you already have a working Go environment, if not please see [this](https://go.dev/doc/install) page first.
+
+```bash
+go install github.com/charlesaraya/pokedex-go/cmd/pokedex@latest
+```
+
+### Run
+
+```bash
+pokedex
+```
+
 ## Features
 
 ### Explore the Pokémon World
@@ -22,15 +45,12 @@ The goal was to create something practical, nostalgic, and technically challengi
  - `encounter`: Encounters a random Pokémon in the area based on their encounter chance. Call `catch`right away (without Pokémon name) before it escapes.
  - `catch [<pokemon>]`: Attempts to catch a Pokémon by name using a simulated Pokéball throw. Successful catches will add the Pokémon to your personal Pokédex.
 
-### Inspect Your Pokémon
-
-- `inspect <pokemon>`: View details (name, height, weight, stats, types) for any Pokémon you've successfully caught.
-
-### Personal Pokédex
+### Personal Pokédex and Inspect Your Pokémon
 
 - `pokedex`: Lists all Pokémon you have caught so far.
+- `inspect <pokemon>`: View details (name, height, weight, stats, types) for any Pokémon you've successfully caught.
 
-### Persistent Pokédex
+### Save your Progress
 
 Your caught Pokémon are now saved to disk and automatically loaded on startup, allowing you to continue where you left off across sessions. No more starting over—your journey is saved!
 
