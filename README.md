@@ -10,13 +10,6 @@ The goal was to create something practical, nostalgic, and technically challengi
 
 ## Getting Started
 
-### Clone & Run
-
-```bash
-git clone https://github.com/charlesaraya/pokedex-cli.git
-cd pokedex-cli
-go run ./cmd/pokedex
-```
 ### Installing
 
 This assumes you already have a working Go environment, if not please see [this](https://go.dev/doc/install) page first.
